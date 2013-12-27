@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		79EBE33B186D4D36002D9D83 /* triangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 79EBE336186D4D36002D9D83 /* triangle.cpp */; };
+		79EBE33C186D4D36002D9D83 /* ofxTriangleMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 79EBE339186D4D36002D9D83 /* ofxTriangleMesh.cpp */; };
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
 		E4328149138ABC9F0047C5CB /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4328148138ABC890047C5CB /* openFrameworksDebug.a */; };
 		E45BE97B0E8CC7DD009D7055 /* AGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45BE9710E8CC7DD009D7055 /* AGL.framework */; };
@@ -60,6 +62,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		79EBE336186D4D36002D9D83 /* triangle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = triangle.cpp; sourceTree = "<group>"; };
+		79EBE337186D4D36002D9D83 /* triangle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = triangle.h; sourceTree = "<group>"; };
+		79EBE339186D4D36002D9D83 /* ofxTriangleMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxTriangleMesh.cpp; sourceTree = "<group>"; };
+		79EBE33A186D4D36002D9D83 /* ofxTriangleMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxTriangleMesh.h; sourceTree = "<group>"; };
 		BBAB23BE13894E4700AA2426 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = ../../../libs/glut/lib/osx/GLUT.framework; sourceTree = "<group>"; };
 		E4328143138ABC890047C5CB /* openFrameworksLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = openFrameworksLib.xcodeproj; path = ../../../libs/openFrameworksCompiled/project/osx/openFrameworksLib.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E45BE9710E8CC7DD009D7055 /* AGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AGL.framework; path = /System/Library/Frameworks/AGL.framework; sourceTree = "<absolute>"; };
@@ -114,9 +120,39 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		79EBE334186D4D36002D9D83 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				79EBE335186D4D36002D9D83 /* Triangle */,
+			);
+			name = lib;
+			path = addon/lib;
+			sourceTree = "<group>";
+		};
+		79EBE335186D4D36002D9D83 /* Triangle */ = {
+			isa = PBXGroup;
+			children = (
+				79EBE336186D4D36002D9D83 /* triangle.cpp */,
+				79EBE337186D4D36002D9D83 /* triangle.h */,
+			);
+			path = Triangle;
+			sourceTree = "<group>";
+		};
+		79EBE338186D4D36002D9D83 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				79EBE339186D4D36002D9D83 /* ofxTriangleMesh.cpp */,
+				79EBE33A186D4D36002D9D83 /* ofxTriangleMesh.h */,
+			);
+			name = src;
+			path = addon/src;
+			sourceTree = "<group>";
+		};
 		BB4B014C10F69532006C3DED /* addons */ = {
 			isa = PBXGroup;
 			children = (
+				79EBE334186D4D36002D9D83 /* lib */,
+				79EBE338186D4D36002D9D83 /* src */,
 			);
 			name = addons;
 			sourceTree = "<group>";
@@ -287,7 +323,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				79EBE33C186D4D36002D9D83 /* ofxTriangleMesh.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
+				79EBE33B186D4D36002D9D83 /* triangle.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* testApp.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
