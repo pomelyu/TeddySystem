@@ -54,6 +54,7 @@ public:
     void elevate();
     bool check_notinside(vector<ofPoint>& added_point,ofPoint check_point);
     void cast();
+    void clone();
     
     
     ofPolyline line;

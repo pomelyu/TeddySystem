@@ -563,6 +563,29 @@ void testApp::prune_2()
     }
 }
 
+void testApp::clone()
+{
+    int T = T_num;
+    for(int i = 0; i<T; ++i)
+    {
+        ofPoint tmp_p[3];
+        tmp_p[0] = Tlist[i].p[0];
+        tmp_p[1] = Tlist[i].p[1];
+        tmp_p[2] = Tlist[i].p[2];
+        of_triangle tmp = of_triangle(tmp_p);
+        tmp.normal[0] = -Tlist[i].normal[0];
+        tmp.normal[1] = -Tlist[i].normal[1];
+        tmp.normal[2] = -Tlist[i].normal[2];
+        
+        tmp.p[0].z = -tmp.p[0].z;
+        tmp.p[1].z = -tmp.p[1].z;
+        tmp.p[2].z = -tmp.p[2].z;
+        
+        ++T_num;
+        Tlist.push_back(tmp);
+    }
+}
+
 
 
 
@@ -690,6 +713,7 @@ void testApp::keyPressed(int key){
     if(key == 'e')
     {
         elevate();
+        clone();
         elevated_T = true;
     }
     if(key == '1')
