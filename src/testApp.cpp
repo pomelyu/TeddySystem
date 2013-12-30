@@ -1,13 +1,148 @@
 #include "testApp.h"
 
-bool release = false;
-bool draw_c = false;
-bool elevated_T = false;
-ofLight l1;
+ofCamera tmp_cam;
+
+
+void testApp::cast()
+{
+    for( vector<of_triangle>::iterator i=Tlist.begin(); i!=Tlist.end(); )
+    {
+        ofVec3f v1 = i->p[2] - i->p[0];
+        ofVec3f v2 = i->p[1] - i->p[0];
+        v1 = v2.cross(v1);
+        if(v1.length() < 0.1)
+        {
+            i = Tlist.erase(i);
+            --T_num;
+        }
+        else
+            ++i;
+    }
+}
+
+bool testApp::check_notinside(vector<ofPoint>& added_point,ofPoint check_point)
+{
+    for(int i = 0; i<added_point.size() ; ++i)
+    {
+        if(check_point == added_point[i])
+            return false;
+    }
+    return true;
+}
 
 void testApp::elevate()
 {
-    ofVec3f v;
+    for(int i =0; i<Tlist.size(); ++i)
+    {
+        for(int j = 0; j<3; ++j)
+        {
+            if(Tlist[i].counter[j] && (Tlist[i].p[j].z == 0))
+            {
+                ofPoint cur_P = Tlist[i].p[j];
+                vector<ofPoint> added_point;
+                vector<int> which_T,which_P;
+                float total_d=0.0f;
+                int total_P=0;
+                for(int k = 0; k<Tlist.size(); ++k)
+                {
+                    if(Tlist[k].p[0] == cur_P)
+                    {
+                        which_T.push_back(k);
+                        which_P.push_back(0);
+                        if(!Tlist[k].counter[1] && check_notinside(added_point, Tlist[k].p[1]))
+                        {
+                            total_d += cur_P.distance(Tlist[k].p[1]);
+                            ++total_P;
+                            added_point.push_back(Tlist[k].p[1]);
+                        }
+                        if(!Tlist[k].counter[2] && check_notinside(added_point, Tlist[k].p[2]))
+                        {
+                            total_d += cur_P.distance(Tlist[k].p[2]);
+                            ++total_P;
+                            added_point.push_back(Tlist[k].p[2]);
+                        }
+                        
+                    }
+                    
+                    if(Tlist[k].p[1] == cur_P)
+                    {
+                        which_T.push_back(k);
+                        which_P.push_back(1);
+                        if(!Tlist[k].counter[0] && check_notinside(added_point, Tlist[k].p[0]))
+                        {
+                            total_d += cur_P.distance(Tlist[k].p[0]);
+                            ++total_P;
+                            added_point.push_back(Tlist[k].p[0]);
+                        }
+                        if(!Tlist[k].counter[2] && check_notinside(added_point, Tlist[k].p[2]))
+                        {
+                            total_d += cur_P.distance(Tlist[k].p[2]);
+                            ++total_P;
+                            added_point.push_back(Tlist[k].p[2]);
+                        }
+                        
+
+                    }
+                    
+                    if(Tlist[k].p[2] == cur_P)
+                    {
+                        which_T.push_back(k);
+                        which_P.push_back(2);
+                        if(!Tlist[k].counter[0] && check_notinside(added_point, Tlist[k].p[0]))
+                        {
+                            total_d += cur_P.distance(Tlist[k].p[0]);
+                            ++total_P;
+                            added_point.push_back(Tlist[k].p[0]);
+                        }
+                        if(!Tlist[k].counter[1] && check_notinside(added_point, Tlist[k].p[1]))
+                        {
+                            total_d += cur_P.distance(Tlist[k].p[1]);
+                            ++total_P;
+                            added_point.push_back(Tlist[k].p[1]);
+                        }
+                        
+                    }
+                }
+                float shift = (total_P==0)? 0 :total_d/(float)total_P;
+                
+                ofVec3f normal = ofVec3f(0.0f,0.0f,0.0f);
+                
+                for(int k = 0; k<which_T.size(); ++k)
+                {
+                    Tlist[which_T[k]].p[which_P[k]].z = shift;
+                    
+                    ofVec3f tmp_n1 = Tlist[which_T[k]].p[2] - Tlist[which_T[k]].p[0];
+                    ofVec3f tmp_n2 = Tlist[which_T[k]].p[1] - Tlist[which_T[k]].p[0];
+                    tmp_n1 = tmp_n2.cross(tmp_n1);
+                    if(tmp_n1.z < 0)
+                        tmp_n1 = -tmp_n1;
+                    tmp_n1 = tmp_n1.normalized();
+                    normal += tmp_n1;
+                }
+                if(normal.z <0)
+                    normal = -normal;
+                for(int k = 0; k<which_T.size(); ++k)
+                {
+                    Tlist[which_T[k]].normal[which_P[k]] = normal;
+                }
+            }
+        }
+    }
+    for(int i =0; i<Tlist.size(); ++i)
+    {
+        ofVec3f normal = Tlist[i].p[2]- Tlist[i].p[0];
+        normal.cross(Tlist[i].p[1]- Tlist[i].p[0]);
+        normal = normal.normalized();
+        if(normal.z<0)
+            normal = -normal;
+        for(int j = 0; j<3; ++j)
+        {
+            if(!Tlist[i].counter[j])
+            {
+                Tlist[i].normal[j] = normal;
+            }
+        }
+    }
 }
 
 
@@ -421,6 +556,7 @@ void testApp::prune_2()
         if(i->type != 3)
         {
             i = Tlist.erase(i);
+            --T_num;
         }
         else
             ++i;
@@ -433,28 +569,33 @@ void testApp::prune_2()
 //--------------------------------------------------------------
 void testApp::setup(){
     
-    ofFloatColor c_l1;
-    c_l1.set(20, 20, 20);
-    l1.setAmbientColor(c_l1);
-    c_l1.set(0, 0, 100);
-    l1.setDiffuseColor(c_l1);
-    c_l1.set(0, 0, 255);
-    l1.setSpecularColor(c_l1);
-    l1.setPointLight();
-    l1.setPosition(0, 0, -50);
-    l1.disable();
+    ofSetSmoothLighting(true);
+    pointLight.setDiffuseColor( ofFloatColor(1.f, 0.f, 0.0f) );
+    pointLight.setSpecularColor( ofFloatColor(1.0f, 0.f, 0.f));
+    pointLight.setPosition(512, 384, 600);
+    
+    // shininess is a value between 0 - 128, 128 being the most shiny //
+	material.setShininess( 50 );
+    // the light highlight of the material //
+	material.setSpecularColor(ofColor(255, 255, 255, 255));
+    
+    cam.resetTransform();
+    cam.setFov(90);
+    cam.clearParent();
+    cam.setPosition(512, 384, 400);
+    cam.lookAt(ofVec3f(512,384,0));
+    //cam.enableOrtho();
+    
+    tmp_cam.resetTransform();
+    tmp_cam.setFov(120);
+    tmp_cam.clearParent();
+    tmp_cam.setPosition(0, 0, 0);
+    tmp_cam.lookAt(ofVec3f(512,384,0));
     
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-    
-    if(elevated_T)
-        l1.enable();
-    else
-        l1.disable();
-    
-    
 }
 
 //--------------------------------------------------------------
@@ -464,16 +605,51 @@ void testApp::draw(){
     //ofBackgroundGradient(ofColor::white, ofColor(200,200,200), OF_GRADIENT_LINEAR);
     if(elevated_T)
     {
+        ofEnableDepthTest();
+        
+        ofEnableLighting();
+        pointLight.enable();
+        
+        cam.begin();
+        material.begin();
+        ofSetColor(255,255,255);
+        
         for(int i =0; i < T_num; ++i)
         {
-            Tlist[i].draw_triangle();
+            glBegin(GL_TRIANGLES);
+                glNormal3f(Tlist[i].normal[0].x,Tlist[i].normal[0].y,Tlist[i].normal[0].z);
+                glVertex3f(Tlist[i].p[0].x,Tlist[i].p[0].y,Tlist[i].p[0].z);
+                glNormal3f(Tlist[i].normal[1].x,Tlist[i].normal[1].y,Tlist[i].normal[1].z);
+                glVertex3f(Tlist[i].p[1].x,Tlist[i].p[1].y,Tlist[i].p[1].z);
+                glNormal3f(Tlist[i].normal[2].x,Tlist[i].normal[2].y,Tlist[i].normal[2].z);
+                glVertex3f(Tlist[i].p[2].x,Tlist[i].p[2].y,Tlist[i].p[2].z);
+            glEnd();
         }
+        
+        material.end();
+        cam.end();
+        
+        ofDisableLighting();
+        ofDisableDepthTest();
+        
+        //ofSetColor(pointLight.getDiffuseColor());
+        //pointLight.draw();
+        
+        //for(int i =0; i < T_num; ++i)
+        //{
+            //ofSetColor(80*(2-Tlist[i].type),80*Tlist[i].type,80*(2-Tlist[i].type));
+            //Tlist[i].draw_triangle();
+            //ofSetColor(255, 255, 255);
+            //Tlist[i].draw_wireframe();
+        //}
     }
     else if(release)
     {
+        //tmp_cam.begin();
+        cam.begin();
         for(int i =0; i < T_num; ++i)
         {
-            ofSetColor(80*(2-Tlist[i].type),80*Tlist[i].type,80*(2-Tlist[i].type));
+            ofSetColor(80*(2-Tlist[i].type),80*Tlist[i].type,128);
             Tlist[i].draw_triangle();
             ofSetColor(255, 255, 255);
             Tlist[i].draw_wireframe();
@@ -483,10 +659,22 @@ void testApp::draw(){
                     Tlist[i].chordal_axis[j].draw();
             //printf("type = %d\n",Tlist[i].type);
         }
+        //cam.draw();
         //mesh.draw();
+        //pointLight.draw();
+        cam.end();
+        //tmp_cam.end();
     }
     else
+    {
+        //tmp_cam.begin();
+        cam.begin();
         line.draw();
+        //cam.draw();
+        //pointLight.draw();
+        cam.end();
+        //tmp_cam.end();
+    }
 }
 
 //--------------------------------------------------------------
@@ -504,6 +692,49 @@ void testApp::keyPressed(int key){
         elevate();
         elevated_T = true;
     }
+    if(key == '1')
+    {
+        for(int i = 0; i<T_num; ++i)
+        {
+            Tlist[i].p[0] = Tlist[i].p[0].rotate(1, ofVec3f(512,384,0), ofVec3f(0,0,1));
+            Tlist[i].p[1] = Tlist[i].p[1].rotate(1, ofVec3f(512,384,0), ofVec3f(0,0,1));
+            Tlist[i].p[2] = Tlist[i].p[2].rotate(1, ofVec3f(512,384,0), ofVec3f(0,0,1));
+            
+            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(-1, ofVec3f(0,0,1));
+            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(-1, ofVec3f(0,0,1));
+            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(-1, ofVec3f(0,0,1));
+                
+        }
+    }
+    if(key == '2')
+    {
+        for(int i = 0; i<T_num; ++i)
+        {
+            Tlist[i].p[0] = Tlist[i].p[0].rotate(1, ofVec3f(512,384,0), ofVec3f(0,1,0));
+            Tlist[i].p[1] = Tlist[i].p[1].rotate(1, ofVec3f(512,384,0), ofVec3f(0,1,0));
+            Tlist[i].p[2] = Tlist[i].p[2].rotate(1, ofVec3f(512,384,0), ofVec3f(0,1,0));
+            
+            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(-1, ofVec3f(0,1,0));
+            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(-1, ofVec3f(0,1,0));
+            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(-1, ofVec3f(0,1,0));
+            
+        }
+    }
+    if(key == '3')
+    {
+        for(int i = 0; i<T_num; ++i)
+        {
+            Tlist[i].p[0] = Tlist[i].p[0].rotate(1, ofVec3f(512,384,0), ofVec3f(1,0,0));
+            Tlist[i].p[1] = Tlist[i].p[1].rotate(1, ofVec3f(512,384,0), ofVec3f(1,0,0));
+            Tlist[i].p[2] = Tlist[i].p[2].rotate(1, ofVec3f(512,384,0), ofVec3f(1,0,0));
+            
+            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(-1, ofVec3f(1,0,0));
+            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(-1, ofVec3f(1,0,0));
+            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(-1, ofVec3f(1,0,0));
+            
+        }
+    }
+    
     
 }
 
@@ -521,7 +752,7 @@ void testApp::mouseMoved(int x, int y ){
 void testApp::mouseDragged(int x, int y, int button){
     
     
-    line.addVertex(ofPoint(x, y));
+    line.addVertex(ofPoint(x, 768-y));
 }
 
 //--------------------------------------------------------------
@@ -530,7 +761,8 @@ void testApp::mousePressed(int x, int y, int button){
     Tlist.clear();
     T_num = 0;
     release = false;
-    line.addVertex(ofPoint(x, y));
+    elevated_T = false;
+    line.addVertex(ofPoint(x, 768-y));
     
 }
 
@@ -631,6 +863,8 @@ void testApp::mouseReleased(int x, int y, int button){
                 Tlist[T_num++].type = internal_edges;
                 
             }
+            
+            cast();
         }
     }
 }
