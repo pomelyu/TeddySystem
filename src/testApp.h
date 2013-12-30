@@ -55,6 +55,7 @@ public:
     bool check_notinside(vector<ofPoint>& added_point,ofPoint check_point);
     void cast();
     void clone();
+    void quarter_oval();
     
     
     ofPolyline line;

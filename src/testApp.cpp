@@ -20,6 +20,149 @@ void testApp::cast()
     }
 }
 
+void testApp::quarter_oval()
+{
+    vector<of_triangle> tmp_T;
+    int tmp_T_num=0;
+    for(int i =0; i<T_num; ++i)
+    {
+        ofPolyline poly1,poly2;
+        poly1.clear();
+        poly2.clear();
+        vector<ofPoint> r_oval1,r_oval2;
+        r_oval1.clear();
+        r_oval2.clear();
+        ofVec3f axis_x = ofVec3f(1,0,0);
+        ofVec3f axis_z = ofVec3f(0,0,1);
+        if(Tlist[i].counter[1])
+        
+        {
+            
+            ofPoint xy_point;
+            xy_point = Tlist[i].p[0];
+            xy_point.z = 0;
+            ofVec3f v1 = Tlist[i].p[2] - xy_point;
+            float rotate_angle = v1.angle(axis_x);
+            ofPoint r_p1 = v1;
+            r_p1.rotate(rotate_angle, axis_z);
+            if(r_p1.angle(axis_x) > 1 )
+            {
+                rotate_angle = -rotate_angle;
+                r_p1 = v1.rotate(rotate_angle, axis_z);
+            }
+            poly1.arc(xy_point,  r_p1.length(), Tlist[i].p[0].z,  270, 0, true);
+            for (int j =0; j<poly1.size(); ++j)
+            {
+                ofPoint tmp_collect = poly1[j];
+                tmp_collect = tmp_collect.rotate(-90, xy_point, axis_x);
+                tmp_collect = tmp_collect.rotate(-rotate_angle, xy_point, axis_z);
+                r_oval1.push_back(tmp_collect);
+            }
+            
+            xy_point = Tlist[i].p[1];
+            xy_point.z = 0;
+            v1 = Tlist[i].p[2] - xy_point;
+            rotate_angle = v1.angle(axis_x);
+            r_p1 = v1;
+            r_p1.rotate(rotate_angle, axis_z);
+            if(r_p1.angle(axis_x) > 1 )
+            {
+                rotate_angle = -rotate_angle;
+                r_p1 = v1.rotate(rotate_angle, axis_z);
+            }
+            poly2.arc(xy_point, r_p1.length(), Tlist[i].p[1].z,  270, 0, true);
+            for (int j =0; j<poly2.size(); ++j)
+            {
+                ofPoint tmp_collect = poly2[j];
+                tmp_collect = tmp_collect.rotate(-90, xy_point, axis_x);
+                tmp_collect = tmp_collect.rotate(-rotate_angle, xy_point, axis_z);
+                r_oval2.push_back(tmp_collect);
+            }
+        }
+        else
+        {
+            ofPoint xy_point;
+            xy_point = Tlist[i].p[0];
+            xy_point.z = 0;
+            ofVec3f v1 = Tlist[i].p[1] - xy_point;
+            float rotate_angle = v1.angle(axis_x);
+            ofPoint r_p1 = v1;
+            r_p1.rotate(rotate_angle, axis_z);
+            if(r_p1.angle(axis_x) > 1 )
+            {
+                rotate_angle = -rotate_angle;
+                r_p1 = v1.rotate(rotate_angle, axis_z);
+            }
+            poly1.arc(xy_point,  r_p1.length(), Tlist[i].p[0].z,  270, 0, true);
+            for (int j =0; j<poly1.size(); ++j)
+            {
+                ofPoint tmp_collect = poly1[j];
+                tmp_collect = tmp_collect.rotate(-90, xy_point, axis_x);
+                tmp_collect = tmp_collect.rotate(-rotate_angle, xy_point, axis_z);
+                r_oval1.push_back(tmp_collect);
+            }
+            
+            v1 = Tlist[i].p[2] - xy_point;
+            rotate_angle = v1.angle(axis_x);
+            r_p1 = v1;
+            r_p1.rotate(rotate_angle, axis_z);
+            if(r_p1.angle(axis_x) > 1 )
+            {
+                rotate_angle = -rotate_angle;
+                r_p1 = v1.rotate(rotate_angle, axis_z);
+            }
+            poly2.arc(xy_point, r_p1.length(), Tlist[i].p[0].z,  270, 0, true);
+            for (int j =0; j<poly2.size(); ++j)
+            {
+                ofPoint tmp_collect = poly2[j];
+                tmp_collect = tmp_collect.rotate(-90, xy_point, axis_x);
+                tmp_collect = tmp_collect.rotate(-rotate_angle, xy_point, axis_z);
+                r_oval2.push_back(tmp_collect);
+            }
+        }
+        
+        bool turn_1 = true;
+        ofPoint T_p1,T_p2,T_p3;
+        T_p1 = r_oval1[0];
+        T_p3 = r_oval2[0];
+        for(int j=1,k=1;j<r_oval1.size() || k<r_oval2.size();)
+        {
+            ofPoint T_tmppoint[3];
+            if(turn_1)
+            {
+                T_p2 = T_p3;
+                T_p3 = r_oval1[j++];
+            }
+            else
+            {
+                T_p1 = T_p3;
+                T_p3 = r_oval2[k++];
+            }
+            
+            turn_1 = !turn_1;
+            T_tmppoint[0] = T_p1;
+            T_tmppoint[1] = T_p2;
+            T_tmppoint[2] = T_p3;
+            tmp_T.push_back(T_tmppoint);
+            
+            ofVec3f v1 = T_p3 - T_p1;
+            ofVec3f v2 = T_p2 - T_p1;
+            v1 = v2.cross(v1);
+            if(v1.z <0)
+                v1 = -v1;
+            v1 = v1.normalized();
+            tmp_T[tmp_T_num].normal[0] = v1;
+            tmp_T[tmp_T_num].normal[1] = v1;
+            tmp_T[tmp_T_num].normal[2] = v1;
+            ++tmp_T_num;
+        }
+        
+    }
+    Tlist.clear();
+    Tlist = tmp_T;
+    T_num = tmp_T_num;
+}
+
 bool testApp::check_notinside(vector<ofPoint>& added_point,ofPoint check_point)
 {
     for(int i = 0; i<added_point.size() ; ++i)
@@ -116,7 +259,7 @@ void testApp::elevate()
                     tmp_n1 = tmp_n2.cross(tmp_n1);
                     if(tmp_n1.z < 0)
                         tmp_n1 = -tmp_n1;
-                    tmp_n1 = tmp_n1.normalized();
+                    //tmp_n1 = tmp_n1.normalized();
                     normal += tmp_n1;
                 }
                 if(normal.z <0)
@@ -144,7 +287,6 @@ void testApp::elevate()
         }
     }
 }
-
 
 void testApp::add_fan_triangle_1(vector<of_edge>& collect_edge,ofPoint center)
 {
@@ -324,8 +466,8 @@ void testApp::prune_1()
                             if(!advanced)
                                 add_fan_triangle_1(collect_edge, center);
                             
-                            if(i == j)
-                                ++i;
+                            //if(i == j)
+                                //++i;
                             Tlist.erase(j);
                             --T_num;
                             break;
@@ -388,8 +530,8 @@ void testApp::prune_1()
                             if(!advanced)
                                 add_fan_triangle_1(collect_edge, center);
                             
-                            if(i == j)
-                                ++i;
+                            //if(i == j)
+                                //++i;
                             Tlist.erase(j);
                             --T_num;
                             break;
@@ -453,8 +595,8 @@ void testApp::prune_1()
                             if(!advanced)
                                 add_fan_triangle_1(collect_edge, center);
                             
-                            if(i == j)
-                                ++i;
+                            //if(i == j)
+                                //++i;
                             Tlist.erase(j);
                             --T_num;
                             break;
@@ -573,13 +715,20 @@ void testApp::clone()
         tmp_p[1] = Tlist[i].p[1];
         tmp_p[2] = Tlist[i].p[2];
         of_triangle tmp = of_triangle(tmp_p);
-        tmp.normal[0] = -Tlist[i].normal[0];
-        tmp.normal[1] = -Tlist[i].normal[1];
-        tmp.normal[2] = -Tlist[i].normal[2];
         
         tmp.p[0].z = -tmp.p[0].z;
         tmp.p[1].z = -tmp.p[1].z;
         tmp.p[2].z = -tmp.p[2].z;
+        
+        ofVec3f v1 = tmp.p[1] -tmp.p[0];
+        ofVec3f v2 = tmp.p[2] -tmp.p[0];
+        v1 = v2.cross(v1);
+        if(v1.z > 0)
+            v1= -v1;
+        
+        tmp.normal[0] = v1;
+        tmp.normal[1] = v1;
+        tmp.normal[2] = v1;
         
         ++T_num;
         Tlist.push_back(tmp);
@@ -697,6 +846,7 @@ void testApp::draw(){
         //pointLight.draw();
         cam.end();
         //tmp_cam.end();
+        
     }
 }
 
@@ -708,14 +858,18 @@ void testApp::keyPressed(int key){
     if(key == 'p')
     {
         prune_1();
+        prune_1(); //has bug : why must do prune_1 twice?
         prune_2();
     }
     if(key == 'e')
     {
         elevate();
+        quarter_oval();
         clone();
         elevated_T = true;
     }
+    if(key == 'o')
+        quarter_oval();
     if(key == '1')
     {
         for(int i = 0; i<T_num; ++i)
@@ -724,9 +878,9 @@ void testApp::keyPressed(int key){
             Tlist[i].p[1] = Tlist[i].p[1].rotate(1, ofVec3f(512,384,0), ofVec3f(0,0,1));
             Tlist[i].p[2] = Tlist[i].p[2].rotate(1, ofVec3f(512,384,0), ofVec3f(0,0,1));
             
-            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(-1, ofVec3f(0,0,1));
-            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(-1, ofVec3f(0,0,1));
-            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(-1, ofVec3f(0,0,1));
+            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(1, ofVec3f(0,0,1));
+            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(1, ofVec3f(0,0,1));
+            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(1, ofVec3f(0,0,1));
                 
         }
     }
@@ -738,9 +892,9 @@ void testApp::keyPressed(int key){
             Tlist[i].p[1] = Tlist[i].p[1].rotate(1, ofVec3f(512,384,0), ofVec3f(0,1,0));
             Tlist[i].p[2] = Tlist[i].p[2].rotate(1, ofVec3f(512,384,0), ofVec3f(0,1,0));
             
-            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(-1, ofVec3f(0,1,0));
-            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(-1, ofVec3f(0,1,0));
-            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(-1, ofVec3f(0,1,0));
+            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(1, ofVec3f(0,1,0));
+            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(1, ofVec3f(0,1,0));
+            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(1, ofVec3f(0,1,0));
             
         }
     }
@@ -752,9 +906,9 @@ void testApp::keyPressed(int key){
             Tlist[i].p[1] = Tlist[i].p[1].rotate(1, ofVec3f(512,384,0), ofVec3f(1,0,0));
             Tlist[i].p[2] = Tlist[i].p[2].rotate(1, ofVec3f(512,384,0), ofVec3f(1,0,0));
             
-            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(-1, ofVec3f(1,0,0));
-            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(-1, ofVec3f(1,0,0));
-            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(-1, ofVec3f(1,0,0));
+            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(1, ofVec3f(1,0,0));
+            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(1, ofVec3f(1,0,0));
+            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(1, ofVec3f(1,0,0));
             
         }
     }
