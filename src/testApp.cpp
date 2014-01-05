@@ -1605,154 +1605,81 @@ void testApp::draw(){
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
-    
-    if(key == 'h')
-        draw_c = !draw_c;
-    if(key == 'c')
-        state = TO_CUT;
-    if(key == 'p')
-        state = TO_PAINT;
-    if(key == 's')
-        state = TO_DRAW_RING;
-    if(key == 'f' && state == TO_REMOVE_TRI){
-        state = TO_EXTRUDE;
-        
-        // create ring triangle
-        // remove triangle in the ring
-        rotateX(-90);
-        
-        // construct ring shape
-        createRing();
-        //removeTriInRing();
-        // remove origin triangle the ring pass
-        removeRing();
-
-    }
-        
-    if(key == 'o')
-    {
-        for(int i = 0; i<Tlist.size(); ++i)
-            Tlist[i].line_seg.clear();
-    }
-    if(key == 'e')
-    {
-        prune_1();
-        prune_1(); //has bug : why must do prune_1 twice?
-        prune_2();
-        
-        elevate();
-        quarter_oval();
-        cast();
-        clone();
-        //elevated_T = true;
-        state = TO_PAINT;
-        line.clear();
-    }
-    if(key == 'r')
-    {
-        line.clear();
-        Tlist.clear();
-        T_num = 0;
-        state = TO_CREATATION;
-    }
-    if(key == 'q')
-    {
-        cut();
-    }
-    if(key == '1')
-    {
-        for(int i = 0; i<T_num; ++i)
-        {
-            Tlist[i].p[0] = Tlist[i].p[0].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,0,1));
-            Tlist[i].p[1] = Tlist[i].p[1].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,0,1));
-            Tlist[i].p[2] = Tlist[i].p[2].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,0,1));
+    //printf("%d", key);
+    switch (key) {
+        case 'h':
+            draw_c = !draw_c;
+            break;
             
-            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(angle, ofVec3f(0,0,1));
-            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(angle, ofVec3f(0,0,1));
-            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(angle, ofVec3f(0,0,1));
+        case 'c':
+            state = TO_CUT;
+            break;
             
-            for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
-            {
-                Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,0,1));
-                Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,0,1));
-            }
+        case 'p':
+            state = TO_PAINT;
+            break;
+            
+        case 's':
+            state = TO_DRAW_RING;
+            break;
+        
+        case 'f':
+            if (state == TO_REMOVE_TRI) {
+                state = TO_EXTRUDE;
                 
-        }
-    }
-    if(key == '2')
-    {
-        for(int i = 0; i<T_num; ++i)
-        {
-            Tlist[i].p[0] = Tlist[i].p[0].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,1,0));
-            Tlist[i].p[1] = Tlist[i].p[1].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,1,0));
-            Tlist[i].p[2] = Tlist[i].p[2].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,1,0));
-            
-            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(angle, ofVec3f(0,1,0));
-            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(angle, ofVec3f(0,1,0));
-            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(angle, ofVec3f(0,1,0));
-            
-            for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
-            {
-                Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,1,0));
-                Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1].rotate(angle, ofVec3f(512,384,0), ofVec3f(0,1,0));
+                // create ring triangle
+                // remove triangle in the ring
+                rotate(-90, ofVec3f(1,0,0));
+                
+                // construct ring shape
+                createRing();
+                //removeTriInRing();
+                // remove origin triangle the ring pass
+                removeRing();
             }
+            break;
             
-        }
+        case 'o':
+            for(int i = 0; i<Tlist.size(); ++i)
+                Tlist[i].line_seg.clear();
+            break;
+            
+        case 'e':
+            prune_1();
+            prune_1(); //has bug : why must do prune_1 twice?
+            prune_2();
+            
+            elevate();
+            quarter_oval();
+            cast();
+            clone();
+            //elevated_T = true;
+            state = TO_PAINT;
+            line.clear();
+            break;
+        
+        case 'r':
+            line.clear();
+            Tlist.clear();
+            T_num = 0;
+            state = TO_CREATATION;
+            break;
+            
+        case 'q':
+            cut();
+            break;
+            
+        case OF_KEY_UP:
+            translate(10, ofVec3f(0, 0, 1));
+            break;
+                      
+        case OF_KEY_DOWN:
+            translate(10, ofVec3f(0, 0, -1));
+            break;
+            
+        default:
+            break;
     }
-    if(key == '3')
-    {
-        for(int i = 0; i<T_num; ++i)
-        {
-            Tlist[i].p[0] = Tlist[i].p[0].rotate(angle, ofVec3f(512,384,0), ofVec3f(1,0,0));
-            Tlist[i].p[1] = Tlist[i].p[1].rotate(angle, ofVec3f(512,384,0), ofVec3f(1,0,0));
-            Tlist[i].p[2] = Tlist[i].p[2].rotate(angle, ofVec3f(512,384,0), ofVec3f(1,0,0));
-            
-            Tlist[i].normal[0] = Tlist[i].normal[0].rotate(angle, ofVec3f(1,0,0));
-            Tlist[i].normal[1] = Tlist[i].normal[1].rotate(angle, ofVec3f(1,0,0));
-            Tlist[i].normal[2] = Tlist[i].normal[2].rotate(angle, ofVec3f(1,0,0));
-            
-            for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
-            {
-                Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0].rotate(angle, ofVec3f(512,384,0), ofVec3f(1,0,0));
-                Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1].rotate(angle, ofVec3f(512,384,0), ofVec3f(1,0,0));
-            }
-            
-        }
-    }
-    if(key == '4')
-    {
-        for(int i = 0; i<T_num; ++i)
-        {
-            Tlist[i].p[0] = Tlist[i].p[0]-ofVec3f(0,0,1);
-            Tlist[i].p[1] = Tlist[i].p[1]-ofVec3f(0,0,1);
-            Tlist[i].p[2] = Tlist[i].p[2]-ofVec3f(0,0,1);
-            
-            for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
-            {
-                Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0]-ofVec3f(0,0,1);
-                Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1]-ofVec3f(0,0,1);
-            }
-            
-        }
-    }
-    if(key == '5')
-    {
-        for(int i = 0; i<T_num; ++i)
-        {
-            Tlist[i].p[0] = Tlist[i].p[0]+ofVec3f(0,0,1);
-            Tlist[i].p[1] = Tlist[i].p[1]+ofVec3f(0,0,1);
-            Tlist[i].p[2] = Tlist[i].p[2]+ofVec3f(0,0,1);
-            
-            for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
-            {
-                Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0]+ofVec3f(0,0,1);
-                Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1]+ofVec3f(0,0,1);
-            }
-            
-        }
-    }
-    
-    
 }
 
 //--------------------------------------------------------------
@@ -1767,6 +1694,20 @@ void testApp::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void testApp::mouseDragged(int x, int y, int button){
+    if (button == 2) {
+        rotate( (y - old_y) * 0.3 , ofVec3f(1, 0, 0));
+        rotate( (x - old_x) * 0.3 , ofVec3f(0, 1, 0));
+        old_x = x;
+        old_y = y;
+        return;
+    }
+    else if (button == 1){
+        translate((x - old_x) * 1, ofVec3f(1, 0, 0));
+        translate((y - old_y) * 1, ofVec3f(0, -1, 0));
+        old_x = x;
+        old_y = y;
+        return;
+    }
     
     if(state == PAINTING)
         line.addVertex(ofPoint(x, 768-y));
@@ -1778,33 +1719,54 @@ void testApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void testApp::mousePressed(int x, int y, int button){
-    
-    if(state == TO_CREATATION)
-        line.addVertex(ofPoint(x, 768-y));
-    else if(state == TO_PAINT)
-    {
-        line.clear();
-        line.addVertex(ofPoint(x, 768-y));
-        state = PAINTING;
+    if (button == 0) { // left
+        if(state == TO_CREATATION)
+            line.addVertex(ofPoint(x, 768-y));
+        else if(state == TO_PAINT)
+        {
+            line.clear();
+            line.addVertex(ofPoint(x, 768-y));
+            state = PAINTING;
+        }
+        else if(state == TO_CUT)
+        {
+            line.clear();
+            line.addVertex(ofPoint(x, 768-y));
+            state = CUTTING;
+        }
+        else if(state == TO_DRAW_RING){
+            line.clear();
+            line.addVertex(ofPoint(x, 768-y));
+            state = DRAWING_RING;
+            //printf("(%d, %d)\n", x, y);
+        }
     }
-    else if(state == TO_CUT)
-    {
-        line.clear();
-        line.addVertex(ofPoint(x, 768-y));
-        state = CUTTING;
+    else if (button == 1){ // middle
+        stateSave = state;
+        old_x = x;
+        old_y = y;
+        state = TRANSLATE;
     }
-    else if(state == TO_DRAW_RING){
-        line.clear();
-        line.addVertex(ofPoint(x, 768-y));
-        state = DRAWING_RING;
-        //printf("(%d, %d)\n", x, y);
+    else if (button == 2){ // right
+        stateSave = state;
+        old_x = x;
+        old_y = y;
+        state = ROTATE;
     }
 }
 
 //--------------------------------------------------------------
 void testApp::mouseReleased(int x, int y, int button){
+    if (button == 2) {
+        state = stateSave;
+        return;
+    }
+    if (button == 1){
+        state = stateSave;
+        return;
+    }
     
-    if(state == 0)
+    if(state == TO_CREATATION)
     {
         if (line.size() > 2){
         
@@ -2066,21 +2028,41 @@ void testApp::removeRing(){
     }
 }
 
-void testApp::rotateX(int theta){
+
+#pragma mark operating 
+void testApp::rotate(float theta, ofVec3f dir){
     for(int i = 0; i<T_num; ++i)
     {
-        Tlist[i].p[0] = Tlist[i].p[0].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
-        Tlist[i].p[1] = Tlist[i].p[1].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
-        Tlist[i].p[2] = Tlist[i].p[2].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
+        Tlist[i].p[0] = Tlist[i].p[0].rotate(theta, ofVec3f(512,384,0), dir);
+        Tlist[i].p[1] = Tlist[i].p[1].rotate(theta, ofVec3f(512,384,0), dir);
+        Tlist[i].p[2] = Tlist[i].p[2].rotate(theta, ofVec3f(512,384,0), dir);
         
-        Tlist[i].normal[0] = Tlist[i].normal[0].rotate(theta, ofVec3f(1,0,0));
-        Tlist[i].normal[1] = Tlist[i].normal[1].rotate(theta, ofVec3f(1,0,0));
-        Tlist[i].normal[2] = Tlist[i].normal[2].rotate(theta, ofVec3f(1,0,0));
+        Tlist[i].normal[0] = Tlist[i].normal[0].rotate(theta, dir);
+        Tlist[i].normal[1] = Tlist[i].normal[1].rotate(theta, dir);
+        Tlist[i].normal[2] = Tlist[i].normal[2].rotate(theta, dir);
         
         for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
         {
-            Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
-            Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
+            Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0].rotate(theta, ofVec3f(512,384,0), dir);
+            Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1].rotate(theta, ofVec3f(512,384,0), dir);
+        }
+        
+    }
+}
+
+
+
+void testApp::translate(float dist, ofVec3f dir){
+    for(int i = 0; i<T_num; ++i)
+    {
+        Tlist[i].p[0] = Tlist[i].p[0] + dist * dir;
+        Tlist[i].p[1] = Tlist[i].p[1] + dist * dir;
+        Tlist[i].p[2] = Tlist[i].p[2] + dist * dir;
+        
+        for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
+        {
+            Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0] + dir;
+            Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1] + dir;
         }
         
     }

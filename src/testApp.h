@@ -14,7 +14,10 @@ enum STATE{
     TO_DRAW_RING    = 6,
     DRAWING_RING    = 7,
     TO_REMOVE_TRI   = 8,
-    TO_EXTRUDE      = 9
+    TO_EXTRUDE      = 9,
+    
+    ROTATE          = 15,
+    TRANSLATE       = 16
 };
 
 class of_edge{
@@ -106,11 +109,14 @@ public:
     void cut();
     void cut_construct(ofVec3f& plane_normal);
     
+    // operating function
+    void rotate(float theta, ofVec3f dir);
+    void translate(float dist, ofVec3f dir);
+    
     // About extrusion
     void createRing();
     void removeTriInRing();
     void removeRing();
-    void rotateX(int theta);
     
     
     // class member
@@ -129,8 +135,10 @@ public:
     bool elevated_T = false;
     
     STATE state = TO_CREATATION;
+    STATE stateSave = TO_CREATATION;
     
-    //int state = 0;
+    int old_x = 0;
+    int old_y = 0;
     
     // for extrusion
     vector<int> triInRing;
