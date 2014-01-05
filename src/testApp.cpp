@@ -584,6 +584,7 @@ void testApp::paint_line()
                     line_p[0] = rtIntersect.intersecctInfos[0].intersectPos;
                     line_p[1] = rtIntersect.intersecctInfos[1].intersectPos;
                     Tlist[which_t[j]].line_seg.push_back(line_p);
+                    triInRing.push_back(which_t[j]);
                     //break;
                 }
                 else //if(rtIntersect.intersecctInfos.size() == 1)
@@ -614,6 +615,7 @@ void testApp::paint_line()
                         line_p[0] = rtIntersect.intersecctInfos[0].intersectPos;
                         line_p[1] = rtIntersect_1.intersecctInfos[0].intersectPos;
                         Tlist[which_t[j]].line_seg.push_back(line_p);
+                        triInRing.push_back(which_t[j]);
                         //break;
                     }
                     /*
@@ -646,6 +648,7 @@ void testApp::paint_line()
                         line_p[0] = rtIntersect_1.intersecctInfos[0].intersectPos;
                         line_p[1] = rtIntersect_1.intersecctInfos[1].intersectPos;
                         Tlist[which_t[j]].line_seg.push_back(line_p);
+                        triInRing.push_back(which_t[j]);
                         //break;
                     }
                 }
@@ -1374,7 +1377,8 @@ void testApp::clone()
 }
 
 
-
+#pragma mark -
+#pragma mark About OF
 
 //--------------------------------------------------------------
 void testApp::setup(){
@@ -1382,7 +1386,7 @@ void testApp::setup(){
     line.clear();
     Tlist.clear();
     T_num = 0;
-    state = 0;
+    state = TO_CREATATION;
     
     ofSetSmoothLighting(true);
     pointLight.setDiffuseColor( ofFloatColor(1.f, 0.0f, 0.0f) );
@@ -1419,7 +1423,7 @@ void testApp::draw(){
     
     
     //ofBackgroundGradient(ofColor::white, ofColor(200,200,200), OF_GRADIENT_LINEAR);
-    if(state == 0)
+    if(state == TO_CREATATION)
     {
         //tmp_cam.begin();
         cam.begin();
@@ -1430,7 +1434,7 @@ void testApp::draw(){
         //tmp_cam.end();
         
     }
-    else if(state == 1)
+    else if(state == CREATATAING)
     {
         //tmp_cam.begin();
         cam.begin();
@@ -1453,7 +1457,7 @@ void testApp::draw(){
         //tmp_cam.end();
     }
     
-    else if(state == 2 || state == 4)
+    else if(state == TO_PAINT || state == TO_CUT || state == TO_REMOVE_TRI)
     {
         
         ofEnableDepthTest();
@@ -1507,7 +1511,7 @@ void testApp::draw(){
 
     }
     
-    else if(state == 3 || state ==5)
+    else if(state == PAINTING || state == CUTTING || state == DRAWING_RING)
     {
         
         ofEnableDepthTest();
@@ -1605,9 +1609,26 @@ void testApp::keyPressed(int key){
     if(key == 'h')
         draw_c = !draw_c;
     if(key == 'c')
-        state = 4;
+        state = TO_CUT;
     if(key == 'p')
-        state = 2;
+        state = TO_PAINT;
+    if(key == 's')
+        state = TO_DRAW_RING;
+    if(key == 'f' && state == TO_REMOVE_TRI){
+        state = TO_EXTRUDE;
+        
+        // create ring triangle
+        // remove triangle in the ring
+        rotateX(-90);
+        
+        // construct ring shape
+        createRing();
+        //removeTriInRing();
+        // remove origin triangle the ring pass
+        removeRing();
+
+    }
+        
     if(key == 'o')
     {
         for(int i = 0; i<Tlist.size(); ++i)
@@ -1624,7 +1645,7 @@ void testApp::keyPressed(int key){
         cast();
         clone();
         //elevated_T = true;
-        state = 2;
+        state = TO_PAINT;
         line.clear();
     }
     if(key == 'r')
@@ -1632,7 +1653,7 @@ void testApp::keyPressed(int key){
         line.clear();
         Tlist.clear();
         T_num = 0;
-        state = 0;
+        state = TO_CREATATION;
     }
     if(key == 'q')
     {
@@ -1747,9 +1768,9 @@ void testApp::mouseMoved(int x, int y ){
 //--------------------------------------------------------------
 void testApp::mouseDragged(int x, int y, int button){
     
-    if(state == 3)
+    if(state == PAINTING)
         line.addVertex(ofPoint(x, 768-y));
-    else if (state == 5)
+    else if (state == CUTTING)
         line.addVertex(ofPoint(x, 768-y));
     else
         line.addVertex(ofPoint(x, 768-y));
@@ -1758,19 +1779,25 @@ void testApp::mouseDragged(int x, int y, int button){
 //--------------------------------------------------------------
 void testApp::mousePressed(int x, int y, int button){
     
-    if(state == 0)
+    if(state == TO_CREATATION)
         line.addVertex(ofPoint(x, 768-y));
-    else if(state == 2)
+    else if(state == TO_PAINT)
     {
         line.clear();
         line.addVertex(ofPoint(x, 768-y));
-        state = 3;
+        state = PAINTING;
     }
-    else if(state == 4)
+    else if(state == TO_CUT)
     {
         line.clear();
         line.addVertex(ofPoint(x, 768-y));
-        state = 5;
+        state = CUTTING;
+    }
+    else if(state == TO_DRAW_RING){
+        line.clear();
+        line.addVertex(ofPoint(x, 768-y));
+        state = DRAWING_RING;
+        //printf("(%d, %d)\n", x, y);
     }
 }
 
@@ -1782,7 +1809,7 @@ void testApp::mouseReleased(int x, int y, int button){
         if (line.size() > 2){
         
         release = true;
-        state = 1;
+        state = CREATATAING;
         
         ofPolyline lineRespaced = line;
         
@@ -1879,18 +1906,27 @@ void testApp::mouseReleased(int x, int y, int button){
         }
     }
     }
-    else if(state == 3)
+    else if(state == PAINTING)
     {
-        state = 2;
+        state = TO_PAINT;
         paint_line();
     }
-    else if(state == 5)
+    else if(state == CUTTING)
     {
-        state = 4;
+        state = TO_CUT;
         cut_plane();
         cut();
     }
+    else if(state == DRAWING_RING){
+        state = TO_REMOVE_TRI;
+        
+        // ring in surface
+        line.addVertex(line[0]);
+        paint_line();
+        
 
+        
+    }
 }
 
 //--------------------------------------------------------------
@@ -1906,4 +1942,146 @@ void testApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void testApp::dragEvent(ofDragInfo dragInfo){
     
+}
+
+#pragma mark -
+#pragma mark About extrusion
+void testApp::createRing(){
+    
+    // reconstruct the triangle along the ring
+    for (int i = 0; i < triInRing.size(); i++) {
+        of_triangle tri = Tlist[triInRing[i]];
+        float level = tri.line_seg[0].p[0].y;
+        float dif[3];
+        dif[0] = tri.p[0].y - level;
+        dif[1] = tri.p[1].y - level;
+        dif[2] = tri.p[2].y - level;
+        
+        if (dif[0] * dif[1] * dif[2] < 0) { // two vertex in ring(+ + -)
+            if (dif[0] < 0){
+                // construct new triangle
+                for (int j = 0; j < tri.line_seg.size(); j++) {
+                    of_triangle tmpTri(tri.p[0], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
+                    tmpTri.copyNormal(tri.normal);
+                    Tlist.push_back(tmpTri);
+                    T_num++;
+                }
+            }
+            else if (dif[1] < 0){
+                // construct new triangle
+                for (int j = 0; j < tri.line_seg.size(); j++) {
+                    of_triangle tmpTri(tri.p[1], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
+                    tmpTri.copyNormal(tri.normal);
+                    Tlist.push_back(tmpTri);
+                    T_num++;
+                }
+            }
+            else if (dif[2] < 0){
+                // construct new triangle
+                for (int j = 0; j < tri.line_seg.size(); j++) {
+                    of_triangle tmpTri(tri.p[2], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
+                    tmpTri.copyNormal(tri.normal);
+                    Tlist.push_back(tmpTri);
+                    T_num++;
+                }
+            }
+            else
+                printf("Err\n");
+
+        }
+        else if (dif[0] * dif[1] * dif[2] > 0){ // one vertex in ring(- - +)
+            if (dif[0] > 0){
+                
+                of_triangle tmpTri2(tri.p[1], tri.p[2], tri.line_seg[0].p[0]);
+                tmpTri2.copyNormal(tri.normal);
+                Tlist.push_back(tmpTri2);
+                T_num++;
+                
+                for (int j = 0; j < tri.line_seg.size(); j++) {
+                    of_triangle tmpTri(tri.p[2], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
+                    tmpTri.copyNormal(tri.normal);
+                    Tlist.push_back(tmpTri);
+                    T_num++;
+                }
+            }
+            else if (dif[1] > 0){
+                
+                of_triangle tmpTri2(tri.p[2], tri.p[0], tri.line_seg[0].p[0]);
+                tmpTri2.copyNormal(tri.normal);
+                Tlist.push_back(tmpTri2);
+                T_num++;
+                
+                for (int j = 0; j < tri.line_seg.size(); j++) {
+                    of_triangle tmpTri(tri.p[0], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
+                    tmpTri.copyNormal(tri.normal);
+                    Tlist.push_back(tmpTri);
+                    T_num++;
+                }
+            }
+            else if (dif[2] > 0){
+                
+                of_triangle tmpTri2(tri.p[0], tri.p[1], tri.line_seg[0].p[0]);
+                tmpTri2.copyNormal(tri.normal);
+                Tlist.push_back(tmpTri2);
+                T_num++;
+                
+                for (int j = 0; j < tri.line_seg.size(); j++) {
+                    of_triangle tmpTri(tri.p[1], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
+                    tmpTri.copyNormal(tri.normal);
+                    Tlist.push_back(tmpTri);
+                    T_num++;
+                }
+            }
+            else
+                printf("Err\n");
+        }
+    }
+    
+#pragma mark TODO
+    // calculate extrusing plane
+    // Get two end of ring
+}
+
+void testApp::removeTriInRing(){
+    
+    float level = Tlist[triInRing[0]].line_seg[0].p[0].y;
+    
+    // remove the triangle in the ring
+    // There would be some bug is the shape is not convex
+    for (vector<of_triangle>::iterator it = Tlist.begin(); it != Tlist.end();) {
+        if ((*it).p[0].y > level && (*it).p[1].y > level && (*it).p[2].y > level)
+            it = Tlist.erase(it);
+        else
+            it++;
+    }
+    
+    triInRing.clear();
+}
+
+void testApp::removeRing(){
+    std::sort(triInRing.begin(), triInRing.end());
+    triInRing.erase(unique(triInRing.begin(), triInRing.end()), triInRing.end());
+    for (int i = triInRing.size()-1; i >= 0; i--) {
+        Tlist.erase(Tlist.begin() + triInRing[i]);
+    }
+}
+
+void testApp::rotateX(int theta){
+    for(int i = 0; i<T_num; ++i)
+    {
+        Tlist[i].p[0] = Tlist[i].p[0].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
+        Tlist[i].p[1] = Tlist[i].p[1].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
+        Tlist[i].p[2] = Tlist[i].p[2].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
+        
+        Tlist[i].normal[0] = Tlist[i].normal[0].rotate(theta, ofVec3f(1,0,0));
+        Tlist[i].normal[1] = Tlist[i].normal[1].rotate(theta, ofVec3f(1,0,0));
+        Tlist[i].normal[2] = Tlist[i].normal[2].rotate(theta, ofVec3f(1,0,0));
+        
+        for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
+        {
+            Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
+            Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1].rotate(theta, ofVec3f(512,384,0), ofVec3f(1,0,0));
+        }
+        
+    }
 }
