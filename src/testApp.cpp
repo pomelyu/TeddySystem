@@ -2317,8 +2317,8 @@ void testApp::translate(float dist, ofVec3f dir){
         
         for(int j = 0; j < Tlist[i].line_seg.size(); ++j)
         {
-            Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0] + dir;
-            Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1] + dir;
+            Tlist[i].line_seg[j].p[0]=Tlist[i].line_seg[j].p[0] + dist * dir;
+            Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1] + dist * dir;
         }
         
     }
