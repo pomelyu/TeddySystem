@@ -133,6 +133,7 @@ public:
     bool release = false;
     bool draw_c = false;
     bool elevated_T = false;
+    bool enableFace = true;
     
     STATE state = TO_CREATATION;
     STATE stateSave = TO_CREATATION;
