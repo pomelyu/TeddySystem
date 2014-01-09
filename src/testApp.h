@@ -20,6 +20,13 @@ enum STATE{
     TRANSLATE       = 16
 };
 
+enum COLOR{
+    NONE,
+    WHITE,
+    GRAY,
+    BLACK
+};
+
 class of_edge{
 
 public:
@@ -72,6 +79,9 @@ public:
     int counter[3]={0,0,0};
     vector<of_edge> chordal_axis,line_seg;
     ofVec3f normal[3];
+    
+    COLOR vColor[3] = {NONE, NONE, NONE};
+    COLOR tColor = NONE;
 };
 
 class testApp : public ofBaseApp{
@@ -113,6 +123,10 @@ public:
     void rotate(float theta, ofVec3f dir);
     void translate(float dist, ofVec3f dir);
     
+    // To createRing
+    void seperateTri();
+    int diffColorTriHasThisPoint(ofPoint pt, COLOR color);
+    
     // About extrusion
     void createRing();
     void removeTriInRing();
@@ -142,6 +156,9 @@ public:
     int old_y = 0;
     
     // for extrusion
-    vector<int> triInRing;
+    vector<int> triBelongToRing;
+    vector<int> triInsideRing;
+    
+    COLOR colorInsideRing = NONE;
     
 };

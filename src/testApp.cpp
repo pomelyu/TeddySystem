@@ -584,7 +584,7 @@ void testApp::paint_line()
                     line_p[0] = rtIntersect.intersecctInfos[0].intersectPos;
                     line_p[1] = rtIntersect.intersecctInfos[1].intersectPos;
                     Tlist[which_t[j]].line_seg.push_back(line_p);
-                    triInRing.push_back(which_t[j]);
+                    triBelongToRing.push_back(which_t[j]);
                     //break;
                 }
                 else //if(rtIntersect.intersecctInfos.size() == 1)
@@ -615,7 +615,7 @@ void testApp::paint_line()
                         line_p[0] = rtIntersect.intersecctInfos[0].intersectPos;
                         line_p[1] = rtIntersect_1.intersecctInfos[0].intersectPos;
                         Tlist[which_t[j]].line_seg.push_back(line_p);
-                        triInRing.push_back(which_t[j]);
+                        triBelongToRing.push_back(which_t[j]);
                         //break;
                     }
                     /*
@@ -648,7 +648,7 @@ void testApp::paint_line()
                         line_p[0] = rtIntersect_1.intersecctInfos[0].intersectPos;
                         line_p[1] = rtIntersect_1.intersecctInfos[1].intersectPos;
                         Tlist[which_t[j]].line_seg.push_back(line_p);
-                        triInRing.push_back(which_t[j]);
+                        triBelongToRing.push_back(which_t[j]);
                         //break;
                     }
                 }
@@ -1651,10 +1651,17 @@ void testApp::keyPressed(int key){
                 rotate(-90, ofVec3f(1,0,0));
                 
                 // construct ring shape
-                createRing();
-                //removeTriInRing();
+                seperateTri();
+                int count = 0;
+                for (int i = 0; i < Tlist.size(); i++) {
+                    if (Tlist[i].tColor == BLACK)
+                        count++;
+                }
+                printf("%d and %lu", count, Tlist.size()-count);
+                //createRing();
+                //removetriBelongToRing();
                 // remove origin triangle the ring pass
-                removeRing();
+                //removeRing();
             }
             break;
             
@@ -1924,367 +1931,6 @@ void testApp::gotMessage(ofMessage msg){
 void testApp::dragEvent(ofDragInfo dragInfo){
     
 }
-
-#pragma mark -
-#pragma mark About extrusion
-void testApp::createRing(){
-    
-    // reconstruct the triangle along the ring
-    for (int i = 0; i < triInRing.size(); i++) {
-        of_triangle tri = Tlist[triInRing[i]];
-        float level = tri.line_seg[0].p[0].y;
-        float dif[3];
-        dif[0] = tri.p[0].y - level;
-        dif[1] = tri.p[1].y - level;
-        dif[2] = tri.p[2].y - level;
-        
-        if (dif[0] * dif[1] * dif[2] < 0) { // two vertex in ring(+ + -)
-            if (dif[0] < 0){
-                // construct new triangle
-                for (int j = 0; j < tri.line_seg.size(); j++) {
-                    of_triangle tmpTri(tri.p[0], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                }
-            }
-            else if (dif[1] < 0){
-                // construct new triangle
-                for (int j = 0; j < tri.line_seg.size(); j++) {
-                    of_triangle tmpTri(tri.p[1], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                }
-            }
-            else if (dif[2] < 0){
-                // construct new triangle
-                for (int j = 0; j < tri.line_seg.size(); j++) {
-                    of_triangle tmpTri(tri.p[2], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                }
-            }
-            else
-                printf("Err\n");
-
-        }
-        else if (dif[0] * dif[1] * dif[2] > 0){ // one vertex in ring(- - +)
-            
-            if (dif[0] > 0){
-                if (tri.line_seg[0].p[0].y < tri.line_seg[0].p[1].y) { // convex
-                    of_triangle tmpTri2(tri.p[1], tri.p[2], tri.line_seg[0].p[0]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                    
-                    for (int j = 0; j < tri.line_seg.size(); j++) {
-                        of_triangle tmpTri(tri.p[2], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
-                        tmpTri.copyNormal(tri.normal);
-                        Tlist.push_back(tmpTri);
-                        T_num++;
-                    }
-                }
-                else{
-                    // p[0], p[1], line_seg[0].p[0] in the same line
-                    if ((tri.p[0] - tri.p[1]).dot(tri.p[0] - tri.line_seg[0].p[0]) == 0) {
-                        for (int i = 0; i < tri.line_seg.size(); i++) {
-                            bool isMin = false;
-                            if (tri.line_seg[i].p[0].y > tri.line_seg[i].p[1].y) {
-                                of_triangle tmpTri(tri.p[1], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                            else{
-                                if (!isMin) {
-                                    isMin = !isMin;
-                                    of_triangle tmpTri(tri.p[1], tri.p[2], tri.line_seg[i].p[0]);
-                                    tmpTri.copyNormal(tri.normal);
-                                    Tlist.push_back(tmpTri);
-                                    T_num++;
-                                }
-                                of_triangle tmpTri(tri.p[2], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                        }
-                    }
-                    // p[0], p[2], line_seg[0].p[0] in the same line
-                    else{
-                        for (int i = 0; i < tri.line_seg.size(); i++) {
-                            bool isMin = false;
-                            if (tri.line_seg[i].p[0].y > tri.line_seg[i].p[1].y) {
-                                of_triangle tmpTri(tri.p[2], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                            else{
-                                if (!isMin) {
-                                    isMin = !isMin;
-                                    of_triangle tmpTri(tri.p[2], tri.p[1], tri.line_seg[i].p[0]);
-                                    tmpTri.copyNormal(tri.normal);
-                                    Tlist.push_back(tmpTri);
-                                    T_num++;
-                                }
-                                of_triangle tmpTri(tri.p[1], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                        }
-                    }
-                }
-            }
-            else if (dif[1] > 0){
-                if (tri.line_seg[0].p[0].y < tri.line_seg[0].p[1].y) { // convex
-                    of_triangle tmpTri2(tri.p[2], tri.p[0], tri.line_seg[0].p[0]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                    
-                    for (int j = 0; j < tri.line_seg.size(); j++) {
-                        of_triangle tmpTri(tri.p[0], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
-                        tmpTri.copyNormal(tri.normal);
-                        Tlist.push_back(tmpTri);
-                        T_num++;
-                    }
-                }
-                else{
-                    // p[1], p[2], line_seg[0].p[0] in the same line
-                    if ((tri.p[1] - tri.p[2]).dot(tri.p[1] - tri.line_seg[0].p[0]) == 0) {
-                        for (int i = 0; i < tri.line_seg.size(); i++) {
-                            bool isMin = false;
-                            if (tri.line_seg[i].p[0].y > tri.line_seg[i].p[1].y) {
-                                of_triangle tmpTri(tri.p[2], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                            else{
-                                if (!isMin) {
-                                    isMin = !isMin;
-                                    of_triangle tmpTri(tri.p[2], tri.p[0], tri.line_seg[i].p[0]);
-                                    tmpTri.copyNormal(tri.normal);
-                                    Tlist.push_back(tmpTri);
-                                    T_num++;
-                                }
-                                of_triangle tmpTri(tri.p[0], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                        }
-                    }
-                    // p[1], p[0], line_seg[0].p[0] in the same line
-                    else{
-                        for (int i = 0; i < tri.line_seg.size(); i++) {
-                            bool isMin = false;
-                            if (tri.line_seg[i].p[0].y > tri.line_seg[i].p[1].y) {
-                                of_triangle tmpTri(tri.p[0], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                            else{
-                                if (!isMin) {
-                                    isMin = !isMin;
-                                    of_triangle tmpTri(tri.p[0], tri.p[2], tri.line_seg[i].p[0]);
-                                    tmpTri.copyNormal(tri.normal);
-                                    Tlist.push_back(tmpTri);
-                                    T_num++;
-                                }
-                                of_triangle tmpTri(tri.p[2], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                        }
-                    }
-                }
-            }
-            else if (dif[2] > 0){
-                if (tri.line_seg[0].p[0].y < tri.line_seg[0].p[1].y) { // convex
-                    of_triangle tmpTri2(tri.p[0], tri.p[1], tri.line_seg[0].p[0]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                    
-                    for (int j = 0; j < tri.line_seg.size(); j++) {
-                        of_triangle tmpTri(tri.p[1], tri.line_seg[j].p[0], tri.line_seg[j].p[1]);
-                        tmpTri.copyNormal(tri.normal);
-                        Tlist.push_back(tmpTri);
-                        T_num++;
-                    }
-                }
-                else{
-                    // p[2], p[0], line_seg[0].p[0] in the same line
-                    if ((tri.p[2] - tri.p[0]).dot(tri.p[2] - tri.line_seg[0].p[0]) == 0) {
-                        for (int i = 0; i < tri.line_seg.size(); i++) {
-                            bool isMin = false;
-                            if (tri.line_seg[i].p[0].y > tri.line_seg[i].p[1].y) {
-                                of_triangle tmpTri(tri.p[0], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                            else{
-                                if (!isMin) {
-                                    isMin = !isMin;
-                                    of_triangle tmpTri(tri.p[0], tri.p[1], tri.line_seg[i].p[0]);
-                                    tmpTri.copyNormal(tri.normal);
-                                    Tlist.push_back(tmpTri);
-                                    T_num++;
-                                }
-                                of_triangle tmpTri(tri.p[1], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                        }
-                    }
-                    // p[2], p[1], line_seg[0].p[0] in the same line
-                    else{
-                        for (int i = 0; i < tri.line_seg.size(); i++) {
-                            bool isMin = false;
-                            if (tri.line_seg[i].p[0].y > tri.line_seg[i].p[1].y) {
-                                of_triangle tmpTri(tri.p[1], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                            else{
-                                if (!isMin) {
-                                    isMin = !isMin;
-                                    of_triangle tmpTri(tri.p[1], tri.p[0], tri.line_seg[i].p[0]);
-                                    tmpTri.copyNormal(tri.normal);
-                                    Tlist.push_back(tmpTri);
-                                    T_num++;
-                                }
-                                of_triangle tmpTri(tri.p[0], tri.line_seg[i].p[0], tri.line_seg[i].p[1]);
-                                tmpTri.copyNormal(tri.normal);
-                                Tlist.push_back(tmpTri);
-                                T_num++;
-                            }
-                        }
-                    }
-                }
-
-            }
-            else
-                printf("Err\n");
-             /*
-            if (dif[0] > 0){
-                if ((tri.p[0] - tri.p[1]).dot(tri.p[0] - tri.line_seg[0].p[0]) == 0) {
-                    of_triangle tmpTri(tri.p[1], tri.p[2], tri.line_seg[0].p[0]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                    
-                    of_triangle tmpTri2(tri.p[2], tri.line_seg[0].p[0], tri.line_seg[tri.line_seg.size()-1].p[1]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                }
-                else{
-                    of_triangle tmpTri(tri.p[1], tri.p[2], tri.line_seg[tri.line_seg.size()-1].p[1]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                    
-                    of_triangle tmpTri2(tri.p[2], tri.line_seg[0].p[0], tri.line_seg[0].p[0]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                }
-            }
-            else if (dif[1] > 0){
-                if ((tri.p[1] - tri.p[2]).dot(tri.p[1] - tri.line_seg[0].p[0]) == 0) {
-                    of_triangle tmpTri(tri.p[2], tri.p[0], tri.line_seg[0].p[0]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                    
-                    of_triangle tmpTri2(tri.p[0], tri.line_seg[0].p[0], tri.line_seg[tri.line_seg.size()-1].p[1]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                }
-                else{
-                    of_triangle tmpTri(tri.p[2], tri.p[0], tri.line_seg[tri.line_seg.size()-1].p[1]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                    
-                    of_triangle tmpTri2(tri.p[0], tri.line_seg[0].p[0], tri.line_seg[0].p[0]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                }
-            }
-            else if (dif[2] > 0){
-                if ((tri.p[2] - tri.p[0]).dot(tri.p[2] - tri.line_seg[0].p[0]) == 0) {
-                    of_triangle tmpTri(tri.p[0], tri.p[1], tri.line_seg[0].p[0]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                    
-                    of_triangle tmpTri2(tri.p[1], tri.line_seg[0].p[0], tri.line_seg[tri.line_seg.size()-1].p[1]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                }
-                else{
-                    of_triangle tmpTri(tri.p[0], tri.p[1], tri.line_seg[tri.line_seg.size()-1].p[1]);
-                    tmpTri.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri);
-                    T_num++;
-                    
-                    of_triangle tmpTri2(tri.p[1], tri.line_seg[0].p[0], tri.line_seg[0].p[0]);
-                    tmpTri2.copyNormal(tri.normal);
-                    Tlist.push_back(tmpTri2);
-                    T_num++;
-                }
-            }
-            else
-                printf("Err\n");
-            */
-        }
-    }
-    
-#pragma mark TODO
-    // calculate extrusing plane
-    // Get two end of ring
-}
-
-void testApp::removeTriInRing(){
-    
-    float level = Tlist[triInRing[0]].line_seg[0].p[0].y;
-    
-    // remove the triangle in the ring
-    // There would be some bug is the shape is not convex
-    for (vector<of_triangle>::iterator it = Tlist.begin(); it != Tlist.end();) {
-        if ((*it).p[0].y > level && (*it).p[1].y > level && (*it).p[2].y > level)
-            it = Tlist.erase(it);
-        else
-            it++;
-    }
-    
-    triInRing.clear();
-}
-
-void testApp::removeRing(){
-    std::sort(triInRing.begin(), triInRing.end());
-    triInRing.erase(unique(triInRing.begin(), triInRing.end()), triInRing.end());
-    for (int i = triInRing.size()-1; i >= 0; i--) {
-        Tlist.erase(Tlist.begin() + triInRing[i]);
-    }
-}
-
-
 #pragma mark operating 
 void testApp::rotate(float theta, ofVec3f dir){
     for(int i = 0; i<T_num; ++i)
