@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		792778D0187D9EBD007D69B0 /* extrude.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 792778CE187D9EBD007D69B0 /* extrude.cpp */; };
 		79EBE33B186D4D36002D9D83 /* triangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 79EBE336186D4D36002D9D83 /* triangle.cpp */; };
 		79EBE33C186D4D36002D9D83 /* ofxTriangleMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 79EBE339186D4D36002D9D83 /* ofxTriangleMesh.cpp */; };
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
@@ -63,7 +62,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		792778CE187D9EBD007D69B0 /* extrude.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = extrude.cpp; sourceTree = "<group>"; };
 		79EBE336186D4D36002D9D83 /* triangle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = triangle.cpp; sourceTree = "<group>"; };
 		79EBE337186D4D36002D9D83 /* triangle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = triangle.h; sourceTree = "<group>"; };
 		79EBE339186D4D36002D9D83 /* ofxTriangleMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxTriangleMesh.cpp; sourceTree = "<group>"; };
@@ -226,7 +224,6 @@
 			children = (
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* testApp.cpp */,
-				792778CE187D9EBD007D69B0 /* extrude.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* testApp.h */,
 			);
 			path = src;
@@ -332,7 +329,6 @@
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				79EBE33B186D4D36002D9D83 /* triangle.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* testApp.cpp in Sources */,
-				792778D0187D9EBD007D69B0 /* extrude.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

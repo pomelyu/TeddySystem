@@ -1579,11 +1579,21 @@ void testApp::draw(){
         
         cam.begin();
         material.begin();
-        ofSetColor(255,255,255);
+        
+        //ofSetColor(255,255,255);
         
         for(int i =0; i < T_num; ++i)
         {
             if (enableFace){
+                
+                if (Tlist[i].tColor == NONE)
+                    ofSetColor(0,0,255);
+                else if (Tlist[i].tColor == GRAY)
+                    ofSetColor(0, 255, 0);
+                else
+                    ofSetColor(255, 0, 0);
+                
+                
                 glBegin(GL_TRIANGLES);
                 glNormal3f(Tlist[i].normal[0].x,Tlist[i].normal[0].y,Tlist[i].normal[0].z);
                 glVertex3f(Tlist[i].p[0].x,Tlist[i].p[0].y,Tlist[i].p[0].z);
@@ -1652,14 +1662,8 @@ void testApp::keyPressed(int key){
                 
                 // construct ring shape
                 seperateTri();
-                int count = 0;
-                for (int i = 0; i < Tlist.size(); i++) {
-                    if (Tlist[i].tColor == BLACK)
-                        count++;
-                }
-                printf("%d and %lu", count, Tlist.size()-count);
-                //createRing();
-                //removetriBelongToRing();
+                printf( "%lu\n", triInsideRing.size());
+                removeTriInRing();
                 // remove origin triangle the ring pass
                 //removeRing();
             }
@@ -1967,5 +1971,127 @@ void testApp::translate(float dist, ofVec3f dir){
             Tlist[i].line_seg[j].p[1]=Tlist[i].line_seg[j].p[1] + dist * dir;
         }
         
+    }
+}
+
+#pragma mark -
+#pragma mark About extrusion
+
+void testApp::seperateTri(){
+    
+    // remove duplicate in triBelongToRing
+    std::sort(triBelongToRing.begin(), triBelongToRing.end());
+    triBelongToRing.erase(unique(triBelongToRing.begin(), triBelongToRing.end()), triBelongToRing.end());
+    
+    // Draw all triangle in ring to WHITE
+    for (int i = 0; i < triBelongToRing.size(); i++)
+        Tlist[triBelongToRing[i]].tColor =WHITE;
+    
+    // Draw one of vertex in a ring triangle to BLACK
+    // Draw the triangle to GRAY
+    // GRAY means the vertex of triangle has been drawed
+    of_triangle* tri = &(Tlist[triBelongToRing[0]]);
+    float level = tri -> line_seg[0].p[0].y;
+    float diff = tri -> p[0].y - level;
+    
+    tri -> vColor[0] = GRAY;
+    for (int i = 1; i < 3; i++) {
+        if ((tri -> p[i].y - level) * diff > 0)
+            tri -> vColor[i] = GRAY;
+    }
+    tri -> tColor = GRAY;
+    
+    vector<of_triangle*> triStack;
+    triStack.push_back(tri);
+    ofPoint pt;
+    
+    while (triStack.size() > 0) {
+        tri = triStack.back();
+        int idx = 0;
+        for (; idx < 3; idx++) {
+            
+            // get the first none BLACL vertex
+            if (tri -> vColor[idx] == GRAY){
+                tri -> vColor[idx] = BLACK;
+                pt = tri -> p[idx];
+                
+                
+                for (int i = 0; i < Tlist.size(); i++) {
+                    tri = &(Tlist[i]);
+                    
+                    // triangle in Ring
+                    if (tri -> tColor == WHITE) {
+                        // check if vertex in the triangle
+                        for (int j = 0; j < 3; j++){
+                            if (check_point_same(pt, tri -> p[j])) {
+                                // draw the three vertex to appropriate color
+                                tri -> vColor[j] = BLACK;
+                                level = tri -> line_seg[0].p[0].y;
+                                diff = tri -> p[j].y - level;
+                                for (int k = 0; k < 3; k++) {
+                                    if ((tri -> p[k].y - level) * diff > 0)
+                                        tri -> vColor[k] = GRAY;
+                                }
+                                tri -> tColor = GRAY;
+                                triStack.push_back(tri);
+                                break;
+                            }
+                        }
+                    }
+                    // adjancent triangle
+                    else if (tri -> tColor == NONE){
+                        // check if vertex in the triangle
+                        for (int j = 0; j < 3; j++) {
+                            if (check_point_same(pt, tri -> p[j])) {
+                                for (int k = 0; k < 3; k++)
+                                    tri -> vColor[k] = GRAY;
+                                tri -> vColor[j] = BLACK;
+                                tri -> tColor = BLACK;
+                                triStack.push_back(tri);
+                                break;
+                            }
+                        }
+                    }
+                }
+                break;
+                
+            }
+        }
+        // If the triangle has no GRAY point
+        // Pop it
+        if (idx == 3)
+            triStack.pop_back();
+    }
+    
+    // Choose which color is in Ring
+    vector<int> vec_BLACK;
+    vector<int> vec_NONE;
+    
+    for (int i = 0; i < Tlist.size(); i++) {
+        if (Tlist[i].tColor == BLACK)
+            vec_BLACK.push_back(i);
+        else if (Tlist[i].tColor == NONE)
+            vec_NONE.push_back(i);
+            
+    }
+    
+    if (vec_BLACK.size() > vec_NONE.size()) {
+        colorInsideRing = NONE;
+        triInsideRing = vec_NONE;
+    }
+    else{
+        colorInsideRing = BLACK;
+        triInsideRing = vec_BLACK;
+    }
+}
+
+
+
+void testApp::removeTriInRing(){
+    if (triInsideRing.size() > 0){
+        std::sort(triInsideRing.begin(), triInsideRing.end());
+        for (int i = Tlist.size() - 1; i >= 0; i--) {
+            Tlist.erase(Tlist.begin() + triInsideRing[i]);
+        }
     }
 }

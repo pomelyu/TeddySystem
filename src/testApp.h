@@ -130,7 +130,6 @@ public:
     // About extrusion
     void createRing();
     void removeTriInRing();
-    void removeRing();
     
     
     // class member
