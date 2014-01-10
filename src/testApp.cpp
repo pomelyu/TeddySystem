@@ -2007,7 +2007,15 @@ void testApp::seperateTri(){
     float onePt = normal.dot(tri->p[0] - tri->line_seg.front().p[0]);
     
     tri -> vColor[0] = GRAY;
-    for (int i = 1; i < 3; i++) {
+    for (int i = 0; i < 3; i++) {
+        // if all the vertex are in or out of the ring
+        float product = (tri->p[i] - tri->line_seg.front().p[0]).dot(tri->p[i] - tri->line_seg.back().p[1]);
+        if (abs(product) < 0.1) {
+            for (int k = 0; k < 3; k++)
+                tri->vColor[k] = GRAY;
+            printf("All in ring\n");
+            break;
+        }
         if (normal.dot(tri->p[i] - tri->line_seg.front().p[0]) * onePt > 0)
             tri -> vColor[i] = GRAY;
     }
@@ -2034,23 +2042,47 @@ void testApp::seperateTri(){
                     // triangle in Ring
                     if (tri->tColor == WHITE) {
                         // check if vertex in the triangle
+                        int sameIdx = -1;
                         for (int j = 0; j < 3; j++){
                             if (check_point_same(pt, tri->p[j])) {
-                                // draw the three vertex to appropriate color
-                                tri->vColor[j] = BLACK;
-                                normal = (tri->normal[0]).cross(tri->line_seg.front().p[0] - tri->line_seg.back().p[1]);
-                                onePt = normal.dot(tri->p[j] - tri->line_seg.front().p[0]);
-                                for (int k = 0; k < 3; k++) {
-                                    if (normal.dot(tri->p[k] - tri->line_seg.front().p[0]) * onePt > 0)
-                                        tri->vColor[k] = GRAY;
-                                }
-                                tri->tColor = GRAY;
-                                triStack.push_back(tri);
+                                sameIdx = j;
                                 break;
                             }
                         }
+                        
+                        // if vertex in the triangle
+                        if (sameIdx != -1) {
+                            
+                            bool threeVertexOutOfRing = false;
+                            for (int j = 0; j < 3; j++) {
+                                ofVec3f vec = tri->p[j] - tri->line_seg.front().p[0];
+                                float product = vec.dot(tri->p[i] - tri->line_seg.back().p[1]);
+                                if (abs(product) < 0.1) {
+                                    for (int k = 0; k < 3; k++)
+                                        tri->vColor[k] = GRAY;
+                                    printf("All in ring\n");
+                                    threeVertexOutOfRing = true;
+                                    break;
+                                }
+                            }
+                            
+                            if (!threeVertexOutOfRing) {
+                                for (int j = 0; j < 3; j++) {
+                                    normal = (tri->normal[0]).cross(tri->line_seg.front().p[0] - tri->line_seg.back().p[1]);
+                                    onePt = normal.dot(tri->p[j] - tri->line_seg.front().p[0]);
+                                    for (int k = 0; k < 3; k++) {
+                                        if (normal.dot(tri->p[k] - tri->line_seg.front().p[0]) * onePt > 0)
+                                            tri->vColor[k] = GRAY;
+                                    }
+                                }
+                            }
+                            
+                            tri->vColor[sameIdx] = BLACK;
+                            tri->tColor = GRAY;
+                            triStack.push_back(tri);
+                            break;
+                        }
                     }
-                    
                     // adjancent triangle
                     else if (tri->tColor == NONE){
                         // check if vertex in the triangle
@@ -2067,7 +2099,6 @@ void testApp::seperateTri(){
                     }
                     
                 }
-                break;
             }
         }
         // If the triangle has no GRAY point
@@ -2098,10 +2129,10 @@ void testApp::seperateTri(){
     }
     
     // For test
-    for (int i = 0; i < triBelongToRing.size(); i++) {
+    for (int i = 0; i < Tlist.size(); i++) {
         for (int j = 0; j < 3; j++) {
-            if (Tlist[triBelongToRing[i]].vColor[j] == BLACK) {
-                tmp1.push_back(triBelongToRing[i]);
+            if (Tlist[i].vColor[j] == BLACK) {
+                tmp1.push_back(i);
                 tmp2.push_back(j);
             }
         }
