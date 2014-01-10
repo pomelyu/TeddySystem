@@ -1582,17 +1582,24 @@ void testApp::draw(){
         
         //ofSetColor(255,255,255);
         
+        // ========= for debug ================ //
+        for (int i = 0; i < tmp1.size(); i++) {
+            ofDrawSphere(Tlist[tmp1[i]].p[tmp2[i]], 2);
+        }
+        // ===================================== //
+
         for(int i =0; i < T_num; ++i)
         {
             if (enableFace){
                 
+                // ========= for debug ================ //
                 if (Tlist[i].tColor == NONE)
                     ofSetColor(0,0,255);
                 else if (Tlist[i].tColor == GRAY)
                     ofSetColor(0, 255, 0);
                 else
                     ofSetColor(255, 0, 0);
-                
+                // ===================================== //
                 
                 glBegin(GL_TRIANGLES);
                 glNormal3f(Tlist[i].normal[0].x,Tlist[i].normal[0].y,Tlist[i].normal[0].z);
@@ -1658,14 +1665,15 @@ void testApp::keyPressed(int key){
                 
                 // create ring triangle
                 // remove triangle in the ring
-                rotate(-90, ofVec3f(1,0,0));
+                //rotate(-90, ofVec3f(1,0,0));
                 
                 // construct ring shape
+                translate(100, ofVec3f(0,0,1));
                 seperateTri();
                 printf( "%lu\n", triInsideRing.size());
-                removeTriInRing();
+                //createRing();
+                //removeTriInRing();
                 // remove origin triangle the ring pass
-                //removeRing();
             }
             break;
             
@@ -1979,6 +1987,10 @@ void testApp::translate(float dist, ofVec3f dir){
 
 void testApp::seperateTri(){
     
+    // Draw all triangle to NONE
+    for (int i = 0; i < Tlist.size(); i++)
+        Tlist[i].tColor = NONE;
+    
     // remove duplicate in triBelongToRing
     std::sort(triBelongToRing.begin(), triBelongToRing.end());
     triBelongToRing.erase(unique(triBelongToRing.begin(), triBelongToRing.end()), triBelongToRing.end());
@@ -1991,12 +2003,12 @@ void testApp::seperateTri(){
     // Draw the triangle to GRAY
     // GRAY means the vertex of triangle has been drawed
     of_triangle* tri = &(Tlist[triBelongToRing[0]]);
-    float level = tri -> line_seg[0].p[0].y;
-    float diff = tri -> p[0].y - level;
+    ofVec3f normal = (tri->normal[0]).cross(tri->line_seg.front().p[0] - tri->line_seg.back().p[1]);
+    float onePt = normal.dot(tri->p[0] - tri->line_seg.front().p[0]);
     
     tri -> vColor[0] = GRAY;
     for (int i = 1; i < 3; i++) {
-        if ((tri -> p[i].y - level) * diff > 0)
+        if (normal.dot(tri->p[i] - tri->line_seg.front().p[0]) * onePt > 0)
             tri -> vColor[i] = GRAY;
     }
     tri -> tColor = GRAY;
@@ -2010,51 +2022,52 @@ void testApp::seperateTri(){
         int idx = 0;
         for (; idx < 3; idx++) {
             
-            // get the first none BLACL vertex
-            if (tri -> vColor[idx] == GRAY){
-                tri -> vColor[idx] = BLACK;
-                pt = tri -> p[idx];
+            // get the first none BLACK vertex
+            if (tri->vColor[idx] == GRAY){
+                tri->vColor[idx] = BLACK;
+                pt = tri->p[idx];
                 
-                
+                // who has this point
                 for (int i = 0; i < Tlist.size(); i++) {
                     tri = &(Tlist[i]);
                     
                     // triangle in Ring
-                    if (tri -> tColor == WHITE) {
+                    if (tri->tColor == WHITE) {
                         // check if vertex in the triangle
                         for (int j = 0; j < 3; j++){
-                            if (check_point_same(pt, tri -> p[j])) {
+                            if (check_point_same(pt, tri->p[j])) {
                                 // draw the three vertex to appropriate color
-                                tri -> vColor[j] = BLACK;
-                                level = tri -> line_seg[0].p[0].y;
-                                diff = tri -> p[j].y - level;
+                                tri->vColor[j] = BLACK;
+                                normal = (tri->normal[0]).cross(tri->line_seg.front().p[0] - tri->line_seg.back().p[1]);
+                                onePt = normal.dot(tri->p[j] - tri->line_seg.front().p[0]);
                                 for (int k = 0; k < 3; k++) {
-                                    if ((tri -> p[k].y - level) * diff > 0)
-                                        tri -> vColor[k] = GRAY;
+                                    if (normal.dot(tri->p[k] - tri->line_seg.front().p[0]) * onePt > 0)
+                                        tri->vColor[k] = GRAY;
                                 }
-                                tri -> tColor = GRAY;
+                                tri->tColor = GRAY;
                                 triStack.push_back(tri);
                                 break;
                             }
                         }
                     }
+                    
                     // adjancent triangle
-                    else if (tri -> tColor == NONE){
+                    else if (tri->tColor == NONE){
                         // check if vertex in the triangle
                         for (int j = 0; j < 3; j++) {
                             if (check_point_same(pt, tri -> p[j])) {
                                 for (int k = 0; k < 3; k++)
-                                    tri -> vColor[k] = GRAY;
-                                tri -> vColor[j] = BLACK;
-                                tri -> tColor = BLACK;
+                                    tri->vColor[k] = GRAY;
+                                tri->vColor[j] = BLACK;
+                                tri->tColor = BLACK;
                                 triStack.push_back(tri);
                                 break;
                             }
                         }
                     }
+                    
                 }
                 break;
-                
             }
         }
         // If the triangle has no GRAY point
@@ -2083,15 +2096,160 @@ void testApp::seperateTri(){
         colorInsideRing = BLACK;
         triInsideRing = vec_BLACK;
     }
+    
+    // For test
+    for (int i = 0; i < triBelongToRing.size(); i++) {
+        for (int j = 0; j < 3; j++) {
+            if (Tlist[triBelongToRing[i]].vColor[j] == BLACK) {
+                tmp1.push_back(triBelongToRing[i]);
+                tmp2.push_back(j);
+            }
+        }
+    }
 }
 
-
-
-void testApp::removeTriInRing(){
-    if (triInsideRing.size() > 0){
-        std::sort(triInsideRing.begin(), triInsideRing.end());
-        for (int i = Tlist.size() - 1; i >= 0; i--) {
-            Tlist.erase(Tlist.begin() + triInsideRing[i]);
+void testApp::createRing(){
+    vector<int> triDelete;
+    
+    for (int i = 0; i < triBelongToRing.size(); i++) {
+        triDelete.push_back(triBelongToRing[i]);
+        of_triangle* tri = &(Tlist[i]);
+        
+        // calculate how many vertex not in the ring
+        vector<int> vInsideRing;
+        for (int j = 0; j < 3; j++) {
+            if (tri->vColor[j] != colorInsideRing)
+                vInsideRing.push_back(j);
         }
+        
+        // if one vetex not in the ring, just connect the
+        // vertex and each line segment to create new triangle
+        if (vInsideRing.size() == 1) {
+            for (int j = 0; j < tri->line_seg.size(); j++) {
+                of_triangle tmpTri(tri->p[vInsideRing[0]],
+                                   tri->line_seg[j].p[0],
+                                   tri->line_seg[j].p[1]);
+                tmpTri.copyNormal(tri->normal);
+                Tlist.push_back(tmpTri);
+                T_num++;
+            }
+        }
+        // if two vertex not in the ring. calculate the lowest
+        // point in line segment. Connect each line segment to
+        // appropriate vertex to create new triangle
+        else if (vInsideRing.size() == 2){
+            float value = 9999;
+            int numLine = 0;
+            int numPoint = 0;
+            for (int j = 0; j < tri->line_seg.size(); j++) {
+                float tmpV1 = (tri->line_seg[j].p[0] - vInsideRing[0]).dot(tri->line_seg[j].p[0] - vInsideRing[1]);
+                float tmpV2 = (tri->line_seg[j].p[1] - vInsideRing[0]).dot(tri->line_seg[j].p[1] - vInsideRing[1]);
+                if (tmpV1 < value) {
+                    value = tmpV1;
+                    numLine = j;
+                    numPoint = 1;
+                }
+                if (tmpV2 < value) {
+                    value = tmpV2;
+                    numLine = j;
+                    numPoint = 2;
+                }
+            }
+            
+            // connect the lowest line segment and two vertex
+            of_triangle tmpTri(tri->line_seg[numLine].p[numPoint],
+                               tri->p[vInsideRing[0]],
+                               tri->p[vInsideRing[1]]);
+            tmpTri.copyNormal(tri->normal);
+            Tlist.push_back(tmpTri);
+            T_num++;
+            
+            // connect each line segment to appropriate vertex
+            for (int j = 0; j < 3; j++) {
+                if (tri->vColor[j] == colorInsideRing) {
+                    
+                    float parallel = (tri->p[j] - tri->p[vInsideRing[0]]).dot(tri->p[j] - tri->line_seg[0].p[0]);
+                    if (abs(parallel) < 0.1) {
+                        
+                        // triangel before numLine
+                        for (int k = 0; k < numLine; k++) {
+                            tmpTri.p[0] = tri->p[vInsideRing[0]];
+                            tmpTri.p[1] = tri->line_seg[k].p[0];
+                            tmpTri.p[2] = tri->line_seg[k].p[1];
+                            Tlist.push_back(tmpTri);
+                            T_num++;
+                        }
+                        
+                        // triangle at numLine
+                        tmpTri.p[0] = tri->line_seg[numLine].p[0];
+                        tmpTri.p[1] = tri->line_seg[numLine].p[1];
+                        if (numPoint == 0)
+                            tmpTri.p[2] = tri->p[vInsideRing[1]];
+                        else
+                            tmpTri.p[2] = tri->p[vInsideRing[0]];
+                        Tlist.push_back(tmpTri);
+                        T_num++;
+                        
+                        // triangle after numLine
+                        for (int k = numLine + 1; k < tri->line_seg.size(); k++) {
+                            tmpTri.p[0] = tri->p[vInsideRing[1]];
+                            tmpTri.p[1] = tri->line_seg[k].p[0];
+                            tmpTri.p[2] = tri->line_seg[k].p[1];
+                            Tlist.push_back(tmpTri);
+                            T_num++;
+                        }
+                        
+                    }
+                    else{
+                        
+                        // triangel before numLine
+                        for (int k = 0; k < numLine; k++) {
+                            tmpTri.p[0] = tri->p[vInsideRing[1]];
+                            tmpTri.p[1] = tri->line_seg[k].p[0];
+                            tmpTri.p[2] = tri->line_seg[k].p[1];
+                            Tlist.push_back(tmpTri);
+                            T_num++;
+                        }
+                        
+                        // triangle at numLine
+                        tmpTri.p[0] = tri->line_seg[numLine].p[0];
+                        tmpTri.p[1] = tri->line_seg[numLine].p[1];
+                        if (numPoint == 0)
+                            tmpTri.p[2] = tri->p[vInsideRing[0]];
+                        else
+                            tmpTri.p[2] = tri->p[vInsideRing[1]];
+                        Tlist.push_back(tmpTri);
+                        T_num++;
+                        
+                        // triangle after numLine
+                        for (int k = numLine + 1; k < tri->line_seg.size(); k++) {
+                            tmpTri.p[0] = tri->p[vInsideRing[0]];
+                            tmpTri.p[1] = tri->line_seg[k].p[0];
+                            tmpTri.p[2] = tri->line_seg[k].p[1];
+                            Tlist.push_back(tmpTri);
+                            T_num++;
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+            
+        }
+        else if (vInsideRing.size() == 3){
+            printf("Haven't handle this situation yet!\n");
+        }
+        else
+            printf("Error, something wrong!!!\n");
+    }
+    
+    
+    for (int i = 0; i < triInsideRing.size(); i++)
+        triDelete.push_back(triInsideRing[i]);
+    
+    
+    std::sort(triDelete.begin(), triDelete.end());
+    for (int i = triDelete.size()-1; i >= 0; i--) {
+        Tlist.erase(Tlist.begin() + triDelete[i]);
     }
 }

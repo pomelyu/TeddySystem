@@ -125,12 +125,7 @@ public:
     
     // To createRing
     void seperateTri();
-    int diffColorTriHasThisPoint(ofPoint pt, COLOR color);
-    
-    // About extrusion
     void createRing();
-    void removeTriInRing();
-    
     
     // class member
     ofPolyline line;
@@ -160,4 +155,7 @@ public:
     
     COLOR colorInsideRing = NONE;
     
+    // for test
+    vector<int> tmp1;
+    vector<int> tmp2;
 };
