@@ -1586,6 +1586,13 @@ void testApp::draw(){
         for (int i = 0; i < tmp1.size(); i++) {
             ofDrawSphere(Tlist[tmp1[i]].p[tmp2[i]], 2);
         }
+        /*
+        ofSetColor(0, 0, 0);
+        for (int i = 0; i < triBelongToRing.size(); i++) {
+            ofDrawSphere(Tlist[triBelongToRing[i]].line_seg.front().p[0], 2);
+            ofDrawSphere(Tlist[triBelongToRing[i]].line_seg.back().p[1], 2);
+        }
+        */
         // ===================================== //
 
         for(int i =0; i < T_num; ++i)
