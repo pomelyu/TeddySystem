@@ -24,7 +24,8 @@ enum COLOR{
     NONE,
     WHITE,
     GRAY,
-    BLACK
+    BLACK,
+    YELLOW,
 };
 
 class of_edge{
@@ -156,6 +157,7 @@ public:
     COLOR colorInsideRing = NONE;
     
     // for test
+    bool isTest = false;
     vector<int> tmp1;
     vector<int> tmp2;
 };
