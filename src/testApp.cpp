@@ -1582,13 +1582,12 @@ void testApp::draw(){
         
         ofSetColor(255,255,255);
         
+        /*
         // ========= for debug ================ //
         if (isTest){
-            /*
             for (int i = 0; i < tmp1.size(); i++) {
                 ofDrawSphere(Tlist[tmp1[i]].p[tmp2[i]], 2);
             }
-            */
             ofSetColor(0, 0, 0);
             for (int i = 0; i < triBelongToRing.size(); i++) {
                 ofDrawSphere(Tlist[triBelongToRing[i]].line_seg.front().p[0], 0.1);
@@ -1596,6 +1595,7 @@ void testApp::draw(){
             }
         }
         // ===================================== //
+        */
 
         for(int i =0; i < T_num; ++i)
         {
@@ -2022,58 +2022,68 @@ void testApp::sorLineSeg(){
         vector<of_edge> edge = Tlist[triBelongToRing[i]].line_seg;
         vector<of_edge> sortedLine;
         
-        int n = edge.size();
-        
-        sortedLine.push_back(edge[0]);
-        edge.erase(edge.begin());
-        
-        ofPoint head;
-        ofPoint tail;
-        
-        while ( edge.size() > 0 ) {
-            head = sortedLine.front().p[0];
-            tail = sortedLine.back().p[1];
+        int n = 0;
+        while (edge.size() > 0) {
+            vector<of_edge> vec;
             
-            bool isFound = false;
-            for (int j = 0; j < edge.size(); j++) {
-                if (edge[j].p[1] == head){
-                    sortedLine.insert(sortedLine.begin(), edge[j]);
-                    edge.erase(edge.begin() + j);
-                    isFound = true;
-                    break;
+            vec.push_back(edge[0]);
+            edge.erase(edge.begin());
+            
+            ofPoint head;
+            ofPoint tail;
+            
+            while (edge.size() > 0) {
+                head = vec.front().p[0];
+                tail = vec.back().p[1];
+                
+                bool isFound = false;
+                for (int j = 0; j < edge.size(); j++) {
+                    if (edge[j].p[0] == head) {
+                        ofPoint tmp = edge[j].p[0];
+                        edge[j].p[0] = edge[j].p[1];
+                        edge[j].p[1] = tmp;
+                        vec.insert(vec.begin(), edge[j]);
+                        edge.erase(edge.begin() + j);
+                        isFound = true;
+                        break;
+                    }
+                    else if (edge[j].p[1] == head){
+                        vec.insert(vec.begin(), edge[j]);
+                        edge.erase(edge.begin() + j);
+                        isFound = true;
+                        break;
+                    }
+                    else if (edge[j].p[0] == tail){
+                        vec.push_back(edge[j]);
+                        edge.erase(edge.begin() + j);
+                        isFound = true;
+                        break;
+                    }
+                    else if (edge[j].p[1] == tail){
+                        ofPoint tmp = edge[j].p[0];
+                        edge[j].p[0] = edge[j].p[1];
+                        edge[j].p[1] = tmp;
+                        vec.push_back(edge[j]);
+                        edge.erase(edge.begin() + j);
+                        isFound = true;
+                        break;
+                    }
                 }
-                else if (edge[j].p[0] == head){
-                    ofPoint tmp = edge[j].p[0];
-                    edge[j].p[0] = edge[j].p[1];
-                    edge[j].p[1] = tmp;
-                    sortedLine.insert(sortedLine.begin(), edge[j]);
-                    edge.erase(edge.begin() + j);
-                    isFound = true;
+                
+                if (!isFound)
                     break;
-                }
-                else if (edge[j].p[0] == tail){
-                    sortedLine.push_back(edge[j]);
-                    edge.erase(edge.begin() + j);
-                    isFound = true;
-                    break;
-                }
-                else if (edge[j].p[1] == tail){
-                    ofPoint tmp = edge[j].p[0];
-                    edge[j].p[0] = edge[j].p[1];
-                    edge[j].p[1] = tmp;
-                    sortedLine.push_back(edge[j]);
-                    edge.erase(edge.begin() + j);
-                    isFound = true;
-                    break;
-                }
             }
-            if (!isFound) {
-                printf("Two edge in the triangle, (%lu/%d)\n", sortedLine.size(), n);
-                break;
+            for (int j = 0 ; j < vec.size(); j++) {
+                sortedLine.push_back(vec[j]);
+            }
+            if (++n == 1) {
+                Tlist[triBelongToRing[i]].numSplit = vec.size();
             }
         }
-        
         Tlist[triBelongToRing[i]].line_seg = sortedLine;
+        
+        if ( n > 1)
+            printf("line with %d segment\n", n);
     }
 }
 
@@ -2093,42 +2103,7 @@ void testApp::seperateTri(){
     // GRAY means the vertex of triangle has been drawed
     of_triangle* tri = &(Tlist[triBelongToRing[0]]);
     
-    bool vertexInOneSide = false;
-    tri -> vColor[0] = GRAY;
-
-    for (int i = 0; i < 3; i++) {
-        
-        // if all the vertex are in or out of the ring
-        ofVec3f vec1 = tri->p[i] - tri->line_seg.front().p[0];
-        ofVec3f vec2 = tri->p[i] - tri->line_seg.back().p[1];
-        if (vec1.length() > 1 && vec2.length() > 1){
-            if (abs(1 - vec1.dot(vec2) / ( vec1.length() * vec2.length() ))  < 0.00001) {
-                for (int k = 0; k < 3; k++)
-                    tri->vColor[k] = GRAY;
-                
-                vertexInOneSide = true;
-                tri->tColor == YELLOW;
-                printf("All in ring First\n");
-                break;
-            }
-        }
-    }
-    
-    ofVec3f norm;
-    float onePt;
-
-    if (!vertexInOneSide) {
-        norm = (tri->normal[0]).cross(tri->line_seg.front().p[0] - tri->line_seg.back().p[1]);
-        onePt = norm.dot(tri->p[0] - tri->line_seg.front().p[0]);
-        
-        for (int i = 0; i < 3; i++) {
-            if (norm.dot(tri->p[i] - tri->line_seg.front().p[0]) * onePt > 0) {
-                tri->vColor[i] = GRAY;
-            }
-        }
-        
-        tri -> tColor = GRAY;
-    }
+    drawRingTriangle(tri, 0);
     
     queue<of_triangle*> triStack;
     triStack.push(tri);
@@ -2145,62 +2120,27 @@ void testApp::seperateTri(){
                 tri->vColor[idx] == BLACK;
                 pt = tri->p[idx];
                 
-                // who has this point
+                // Who has this point
                 for (int i = 0; i < Tlist.size(); i++) {
                     of_triangle* tr = &(Tlist[i]);
                     
-                    int sameIdx = 0;
-                    for (; sameIdx < 3; sameIdx++) {
-                        if (check_point_same(pt, tr->p[sameIdx]))
+                    for (int sameIdx = 0; sameIdx < 3; sameIdx++) {
+                        if (check_point_same(pt, tr->p[sameIdx])){
+                            if (tr->tColor == WHITE) {
+                                drawRingTriangle(tr, sameIdx);
+                                triStack.push(tr);
+                            }
+                            else if (tr->tColor == NONE){
+                                for (int k = 0; k < 3; k++)
+                                    tr->vColor[k] = GRAY;
+                                tr->vColor[sameIdx] = BLACK;
+                                tr->tColor = BLACK;
+                                triStack.push(tr);
+                            }
+                            else
+                                tr->vColor[sameIdx] = BLACK;
                             break;
-                    }
-                    
-                    if (sameIdx != 3){
-                        if (tr->tColor == WHITE) {
-                            
-                            // Check if three vertex are in or out of ring
-                            bool threeVertexOutOfRing = false;
-                            
-                            for (int j = 0; j < 3; j++) {
-                                ofVec3f vec1 = tr->p[j] - tr->line_seg.front().p[0];
-                                ofVec3f vec2 = tr->p[j] - tr->line_seg.back().p[1];
-                                if (vec1.length() > 1 && vec2.length() > 1) {
-                                    if (abs(1 - vec1.dot(vec2) / ( vec1.length() * vec2.length() )) < 0.00001) {
-                                        for (int k = 0; k < 3; k++)
-                                            tr->vColor[k] = GRAY;
-                                        threeVertexOutOfRing = true;
-                                        
-                                        tr->tColor = YELLOW;
-                                        printf("All in ring\n");
-                                        break;
-                                    }
-                                }
-                            }
-                            
-                            
-                            // Draw appropriate color to vertex
-                            if (!threeVertexOutOfRing) {
-                                norm = (tr->normal[0]).cross(tr->line_seg.front().p[0] - tr->line_seg.back().p[1]);
-                                onePt = norm.dot(tr->p[sameIdx] - tr->line_seg.front().p[0]);
-                                for (int k = 0; k < 3; k++) {
-                                    if (norm.dot(tr->p[k] - tr->line_seg.front().p[0]) * onePt > 0)
-                                        tr->vColor[k] = GRAY;
-                                }
-                                tr->tColor = GRAY;
-                            }
-                            
-                            tr->vColor[sameIdx] = BLACK;
-                            triStack.push(tr);
                         }
-                        else if (tr->tColor == NONE){
-                            for (int k = 0; k < 3; k++)
-                                tr->vColor[k] = GRAY;
-                            tr->vColor[sameIdx] = BLACK;
-                            tr->tColor = BLACK;
-                            triStack.push(tr);
-                        }
-                        else
-                            tr->vColor[sameIdx] = BLACK;
                     }
                 }
             }
@@ -2239,6 +2179,67 @@ void testApp::seperateTri(){
         }
     }
 }
+
+void testApp::drawRingTriangle(of_triangle* tri, int baseIdx){
+    
+    //======== Just one line segment =======
+    if (tri->numSplit == tri->line_seg.size()) {
+        // Check if three vertex are in or out of ring
+        bool threeVertexOutOfRing = false;
+        
+        for (int j = 0; j < 3; j++) {
+            ofVec3f vec1 = tri->p[j] - tri->line_seg.front().p[0];
+            ofVec3f vec2 = tri->p[j] - tri->line_seg.back().p[1];
+            ofVec3f vec3 = tri->line_seg.front().p[0] - tri->line_seg.back().p[1];
+            if (vec1.length() > 1 && vec2.length() > 1) {
+                if (abs(1 - abs(vec1.dot(vec3) / ( vec1.length() * vec3.length())) ) < 0.001 &&
+                    abs(1 - (vec1.dot(vec2)) / (vec1.length() * vec2.length())) < 0.001) {
+                    for (int k = 0; k < 3; k++)
+                        tri->vColor[k] = GRAY;
+                    threeVertexOutOfRing = true;
+                    
+                    tri->tColor = GRAY;
+                    //tri->tColor = YELLOW;
+                    printf("All in ring\n");
+                    break;
+                }
+            }
+        }
+        
+        
+        // Draw appropriate color to vertex
+        if (!threeVertexOutOfRing) {
+            ofVec3f norm = (tri->normal[0]).cross(tri->line_seg.front().p[0] - tri->line_seg.back().p[1]);
+            float onePt = norm.dot(tri->p[baseIdx] - tri->line_seg.front().p[0]);
+            for (int k = 0; k < 3; k++) {
+                if (norm.dot(tri->p[k] - tri->line_seg.front().p[0]) * onePt > 0)
+                    tri->vColor[k] = GRAY;
+            }
+            tri->tColor = GRAY;
+        }
+        
+        tri->vColor[baseIdx] = BLACK;
+    }
+    //======== Two line segment =======
+    else{
+        int split = tri->numSplit;
+        ofVec3f norm1 = (tri->normal[0]).cross(tri->line_seg.front().p[0] - tri->line_seg[split-1].p[1]);
+        ofVec3f norm2 = (tri->normal[0]).cross(tri->line_seg[split].p[0] - tri->line_seg.back().p[1]);
+        float base = norm1.dot(tri->p[baseIdx] - tri->line_seg.front().p[0]);
+        base = base * norm2.dot(tri->p[baseIdx] - tri->line_seg.back().p[1]);
+        
+        for (int k = 0; k < 3; k++) {
+            float compare = norm1.dot(tri->p[k] - tri->line_seg.front().p[0]);
+            compare = compare * norm2.dot(tri->p[k] - tri->line_seg.back().p[1]);
+            
+            if (compare * base > 0)
+                tri->vColor[k] = GRAY;
+        }
+        tri->vColor[baseIdx] = BLACK;
+        tri->tColor = GRAY;
+    }
+}
+
 
 void testApp::createRing(){
     vector<int> triDelete;
