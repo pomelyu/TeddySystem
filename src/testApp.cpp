@@ -1691,6 +1691,8 @@ void testApp::keyPressed(int key){
                 // create ring triangle
                 // remove triangle in the ring
                 //rotate(-90, ofVec3f(1,0,0));
+                // sorting the line edge in each triangle
+                sorLineSeg();
                 
                 // construct ring shape
                 seperateTri();
@@ -2010,15 +2012,77 @@ void testApp::translate(float dist, ofVec3f dir){
 #pragma mark -
 #pragma mark About extrusion
 
+void testApp::sorLineSeg(){
+    
+    // remove duplicate in triBelongToRing
+    std::sort(triBelongToRing.begin(), triBelongToRing.end());
+    triBelongToRing.erase(unique(triBelongToRing.begin(), triBelongToRing.end()), triBelongToRing.end());
+    
+    for (int i = 0; i < triBelongToRing.size(); i++) {
+        vector<of_edge> edge = Tlist[triBelongToRing[i]].line_seg;
+        vector<of_edge> sortedLine;
+        
+        int n = edge.size();
+        
+        sortedLine.push_back(edge[0]);
+        edge.erase(edge.begin());
+        
+        ofPoint head;
+        ofPoint tail;
+        
+        while ( edge.size() > 0 ) {
+            head = sortedLine.front().p[0];
+            tail = sortedLine.back().p[1];
+            
+            bool isFound = false;
+            for (int j = 0; j < edge.size(); j++) {
+                if (edge[j].p[1] == head){
+                    sortedLine.insert(sortedLine.begin(), edge[j]);
+                    edge.erase(edge.begin() + j);
+                    isFound = true;
+                    break;
+                }
+                else if (edge[j].p[0] == head){
+                    ofPoint tmp = edge[j].p[0];
+                    edge[j].p[0] = edge[j].p[1];
+                    edge[j].p[1] = tmp;
+                    sortedLine.insert(sortedLine.begin(), edge[j]);
+                    edge.erase(edge.begin() + j);
+                    isFound = true;
+                    break;
+                }
+                else if (edge[j].p[0] == tail){
+                    sortedLine.push_back(edge[j]);
+                    edge.erase(edge.begin() + j);
+                    isFound = true;
+                    break;
+                }
+                else if (edge[j].p[1] == tail){
+                    ofPoint tmp = edge[j].p[0];
+                    edge[j].p[0] = edge[j].p[1];
+                    edge[j].p[1] = tmp;
+                    sortedLine.push_back(edge[j]);
+                    edge.erase(edge.begin() + j);
+                    isFound = true;
+                    break;
+                }
+            }
+            if (!isFound) {
+                printf("Two edge in the triangle, (%lu/%d)\n", sortedLine.size(), n);
+                break;
+            }
+        }
+        
+        Tlist[triBelongToRing[i]].line_seg = sortedLine;
+    }
+}
+
+
 void testApp::seperateTri(){
     
     // Draw all triangle to NONE
     for (int i = 0; i < Tlist.size(); i++)
         Tlist[i].tColor = NONE;
-    
-    // remove duplicate in triBelongToRing
-    std::sort(triBelongToRing.begin(), triBelongToRing.end());
-    triBelongToRing.erase(unique(triBelongToRing.begin(), triBelongToRing.end()), triBelongToRing.end());
     
     // Draw all triangle in ring to WHITE
     for (int i = 0; i < triBelongToRing.size(); i++)

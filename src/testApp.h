@@ -81,6 +81,7 @@ public:
     vector<of_edge> chordal_axis,line_seg;
     ofVec3f normal[3];
     
+    int numSegment = 1;
     COLOR vColor[3] = {NONE, NONE, NONE};
     COLOR tColor = NONE;
 };
@@ -125,6 +126,7 @@ public:
     void translate(float dist, ofVec3f dir);
     
     // To createRing
+    void sorLineSeg();
     void seperateTri();
     void createRing();
     
