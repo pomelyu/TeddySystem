@@ -32,6 +32,7 @@ class of_edge{
 
 public:
     of_edge(){}
+    of_edge(ofPoint pt1, ofPoint pt2) { p[0] = pt1; p[1] = pt2; }
     of_edge(ofPoint input[2]) { p[0]= input[0];p[1]= input[1]; }
     
     ~of_edge() { p[0].~ofVec3f();p[1].~ofVec3f(); }
@@ -126,9 +127,11 @@ public:
     void translate(float dist, ofVec3f dir);
     
     // To createRing
-    void sorLineSeg();
+    void sortLineSeg();
     void seperateTri();
     void drawRingTriangle(of_triangle* tri, int baseIdx);
+    void simplifyLine();
+    vector<of_edge> simplifyOneLine(of_triangle* tri, int first, int last);
     void createRing();
     
     // class member
@@ -161,6 +164,4 @@ public:
     
     // for test
     bool isTest = false;
-    vector<int> tmp1;
-    vector<int> tmp2;
 };
